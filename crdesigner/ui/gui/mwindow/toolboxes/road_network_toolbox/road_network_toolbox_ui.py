@@ -21,11 +21,11 @@ class RoadNetworkToolboxUI(Toolbox):
         """reimplement this to define all your sections
         and add them as (title, widget) tuples to self.sections
         """
+        self.sections.append(self.create_intersection_widget())
         self.sections.append(self.create_lanelet_widget())
         self.sections.append(self.create_lanelet_operations_widget())
         self.sections.append(self.create_traffic_sign_widget())
         self.sections.append(self.create_traffic_light_widget())
-        self.sections.append(self.create_intersection_widget())
 
     def create_lanelet_widget(self):
         label_general = QLabel("Lanelet Attributes")
@@ -557,6 +557,24 @@ class RoadNetworkToolboxUI(Toolbox):
         self.other_lanelet_to_fit = QComboBox()
         self.button_fit_intersection = QPushButton("Fit to intersection")
         self.intersection_fitting_groupbox = QGroupBox("Intersection fitting")
+        
+        self.button_translate_intersection = QPushButton("Translate")
+        self.button_translate_intersection.setFixedWidth(100)
+        self.intersection_translate_x_label = QLabel("x:")
+        self.intersection_x_translation = QLineEdit()
+        self.intersection_x_translation.setMaximumWidth(45)
+        self.intersection_x_translation.setValidator(QDoubleValidator())
+        self.intersection_x_translation.setMaxLength(4)
+        self.intersection_x_translation.setAlignment(Qt.AlignRight)
+        self.intersection_translate_x_unit_label = QLabel("[m]")
+        self.intersection_translate_y_label = QLabel("y:")
+        self.intersection_y_translation = QLineEdit()
+        self.intersection_y_translation.setMaximumWidth(45)
+        self.intersection_y_translation.setValidator(QDoubleValidator())
+        self.intersection_y_translation.setMaxLength(4)
+        self.intersection_y_translation.setAlignment(Qt.AlignRight)
+        self.intersection_translate_y_unit_label = QLabel("[m]")
+        
 
         intersection_templates_layout = QFormLayout()
         intersection_template_groupbox = QGroupBox()
@@ -577,6 +595,21 @@ class RoadNetworkToolboxUI(Toolbox):
         intersection_adding_updating_groupbox.setLayout(intersection_adding_updating_layout)
         intersection_adding_updating_layout.addRow(label_update_intersection)
         intersection_adding_updating_layout.addRow("Selected Intersection:", self.selected_intersection)
+        
+        # Adding translation section intersection UI
+        intersection_operations_translation_groupbox_layout = QGridLayout()
+        intersection_operations_translation_groupbox = QGroupBox()
+        intersection_operations_translation_groupbox.setLayout(intersection_operations_translation_groupbox_layout)
+        intersection_operations_translation_groupbox_layout.addWidget(self.button_translate_intersection, 1, 0)
+        intersection_operations_translation_groupbox_layout.addWidget(self.intersection_translate_x_label, 1, 1)
+        intersection_operations_translation_groupbox_layout.addWidget(self.intersection_x_translation, 1, 2)
+        intersection_operations_translation_groupbox_layout.addWidget(self.intersection_translate_x_unit_label, 1, 3)
+        intersection_operations_translation_groupbox_layout.addWidget(self.intersection_translate_y_label, 1, 4)
+        intersection_operations_translation_groupbox_layout.addWidget(self.intersection_y_translation, 1, 5)
+        intersection_operations_translation_groupbox_layout.addWidget(self.intersection_translate_y_unit_label, 1, 6)
+        intersection_adding_updating_layout.addRow(intersection_operations_translation_groupbox)
+        
+        
         intersection_incoming_layout = QFormLayout()
         intersection_incoming_groupbox = QGroupBox()
         intersection_incoming_groupbox.setLayout(intersection_incoming_layout)
@@ -590,6 +623,7 @@ class RoadNetworkToolboxUI(Toolbox):
         intersection_adding_updating_layout.addRow(self.button_update_intersection)
         intersection_adding_updating_layout.addRow(self.button_fit_intersection)
         layout_intersection.addWidget(intersection_adding_updating_groupbox)
+
 
         intersection_fitting_layout = QFormLayout()
         intersection_fitting_groupbox = QGroupBox()
