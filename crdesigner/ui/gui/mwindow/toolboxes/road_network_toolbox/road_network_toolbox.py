@@ -90,6 +90,8 @@ class RoadNetworkToolbox(QDockWidget):
             lambda: self.add_three_way_intersection())
         self.road_network_toolbox_ui.selected_intersection.currentTextChanged.connect(
             lambda: self.update_intersection_information())
+        self.road_network_toolbox_ui.button_translate_intersection.clicked.connect(lambda: self.translate_intersection())
+
         self.road_network_toolbox_ui.button_add_incoming.clicked.connect(lambda: self.add_incoming_to_table())
         self.road_network_toolbox_ui.button_remove_incoming.clicked.connect(lambda: self.remove_incoming())
         self.road_network_toolbox_ui.button_fit_intersection.clicked.connect(lambda: self.fit_intersection())
@@ -1302,3 +1304,36 @@ class RoadNetworkToolbox(QDockWidget):
             MapCreator.fit_intersection_to_predecessor(lanelet_predecessor, lanelet_successor, intersection,
                                                        self.current_scenario.lanelet_network)
             self.callback(self.current_scenario)
+    
+    
+        
+    def translate_intersection(self):
+        if self.road_network_toolbox_ui.selected_intersection.currentText() in ["", "None"]:
+            return
+        
+        # Getting translation details.
+        try:
+            x_translation = float(self.road_network_toolbox_ui.intersection_x_translation.text())
+        except ValueError:
+            x_translation = 0
+    
+        try:
+            y_translation = float(self.road_network_toolbox_ui.intersection_y_translation.text())
+        except ValueError:
+            y_translation = 0
+            
+        selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
+        intersection = self.current_scenario.lanelet_network.find_intersection_by_id(selected_intersection_id)
+
+        # intersection.translate_rotate(np.array([x_translation, y_translation]), 0)
+        '''
+        Why we did not abstract this process? 
+        -> intersection class cannot access the current_scenario, hence it is not able
+        to find lanelets and translate them
+        '''
+        for lanelet_id in intersection.lanelet_ids:
+            lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id(lanelet_id)
+            lanelet.translate_rotate(np.array([x_translation, y_translation]), 0)
+
+        self.callback(self.current_scenario)
+    
