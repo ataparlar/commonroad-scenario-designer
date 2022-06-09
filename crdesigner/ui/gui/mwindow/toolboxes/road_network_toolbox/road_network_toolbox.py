@@ -1313,6 +1313,15 @@ class RoadNetworkToolbox(QDockWidget):
     
         
     def translate_intersection(self):
+        
+        
+        base_lanelet_ids = []
+        lanelet_ids = []
+        traffic_sign_ids = []
+        traffic_light_ids = []
+        
+        
+        
         if self.road_network_toolbox_ui.selected_intersection.currentText() in ["", "None"]:
             return
         
@@ -1337,8 +1346,7 @@ class RoadNetworkToolbox(QDockWidget):
         to find lanelets and translate them
         '''
         
-        x = []
-        lanelet_ids = []
+        
         
         
         for i in intersection.incomings:
@@ -1361,9 +1369,9 @@ class RoadNetworkToolbox(QDockWidget):
                 inc = list(i._incoming_lanelets)
             else:
                 inc = []
-            x = x + left + right + straight + inc
+            base_lanelet_ids = base_lanelet_ids + left + right + straight + inc
 
-        for idx in x:
+        for idx in base_lanelet_ids:
             lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id( lanelet_id=idx)
             if lanelet:
                 lanelet_ids.append(idx)
@@ -1380,5 +1388,28 @@ class RoadNetworkToolbox(QDockWidget):
             lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id(lanelet_id)
             lanelet.translate_rotate(np.array([x_translation, y_translation]), 0)
 
-        self.callback(self.current_scenario)
     
+    
+        # get intersection traffic signs
+        
+        for lanelet_id in lanelet_ids:
+            lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id(lanelet_id)
+            traffic_sign_ids = traffic_sign_ids + list(lanelet.traffic_signs)
+            traffic_light_ids = traffic_light_ids + list(lanelet.traffic_lights)
+            
+        # translate the traffic signs
+        print(traffic_sign_ids, traffic_light_ids)
+        for traffic_light_id  in traffic_light_ids: 
+            traffic_light = self.current_scenario.lanelet_network.find_traffic_light_by_id(traffic_light_id)
+            # traffic_sign.position = traffic_sign.position 
+            if not traffic_light is None:
+                traffic_light.translate_rotate(np.array([x_translation, y_translation]), 0)
+        
+        for traffic_sign_id  in traffic_sign_ids: 
+            traffic_sign = self.current_scenario.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
+            # traffic_sign.position = traffic_sign.position 
+            if not traffic_sign is None:
+                traffic_sign.translate_rotate(np.array([x_translation, y_translation]), 0)
+        
+        
+        self.callback(self.current_scenario)
