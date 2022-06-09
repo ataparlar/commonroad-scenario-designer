@@ -498,8 +498,9 @@ class MapCreator:
                                                             successors_right=right, successors_straight=straight,
                                                             successors_left=left, left_of=left_of[n]))
         intersection_id = scenario.generate_object_id()
-        intersection = Intersection(intersection_id=intersection_id, incomings=map_incoming,lanelet_ids = set(lanelet_ids))
-
+        intersection = Intersection(intersection_id=intersection_id, incomings=map_incoming)
+        
+      
         new_traffic_signs = []
         sign_ids = [set()] * 4
         new_traffic_lights = []
@@ -692,7 +693,7 @@ class MapCreator:
                                                             successors_left=left, left_of=left_of[n]))
 
         intersection_id = scenario.generate_object_id()
-        intersection = Intersection(intersection_id=intersection_id, incomings=map_incoming, lanelet_ids = set(lanelet_ids))
+        intersection = Intersection(intersection_id=intersection_id, incomings=map_incoming)
 
         new_traffic_signs = []
         new_traffic_lights = []

@@ -1111,6 +1111,7 @@ class RoadNetworkToolbox(QDockWidget):
         """
         Adds an intersection to the scenario.
         """
+        
         if self.current_scenario is None:
             self.text_browser.append("_Warning:_ Create a new file")
             return
@@ -1124,7 +1125,7 @@ class RoadNetworkToolbox(QDockWidget):
                 {int(item) for item in
                  self.road_network_toolbox_ui.intersection_incomings_table.cellWidget(row, 1).get_checked_items()}
             if len(incoming_lanelets) < 1:
-                self.text_browser.append("_Warning:_ An incoming must consist at least of one lanelet.")
+                self.text_browser.append("_Warning:_ An incoming must consist at least of one lanelet.",len(incoming_lanelets),str(incoming_lanelets))
                 print("road_network_toolbox.py/add_intersection: An incoming must consist at least of one lanelet.")
                 return
             successor_left = {int(item) for item in
@@ -1145,10 +1146,14 @@ class RoadNetworkToolbox(QDockWidget):
             incoming = IntersectionIncomingElement(incoming_id, incoming_lanelets, successor_right,
                                                    successor_straight, successor_left, left_of)
             incomings.append(incoming)
+            
+            
+            
+            
         crossings = {int(item) for item in self.road_network_toolbox_ui.intersection_crossings.get_checked_items()}
 
         if len(incomings) > 1:
-            intersection = Intersection(intersection_id, incomings, crossings)
+            intersection = Intersection(intersection_id, incomings, crossings )
             self.current_scenario.add_objects(intersection)
 
             self.set_default_road_network_list_information()
@@ -1331,7 +1336,47 @@ class RoadNetworkToolbox(QDockWidget):
         -> intersection class cannot access the current_scenario, hence it is not able
         to find lanelets and translate them
         '''
-        for lanelet_id in intersection.lanelet_ids:
+        
+        x = []
+        lanelet_ids = []
+        
+        
+        for i in intersection.incomings:
+            if i._successors_left is not None:
+                left = list(i._successors_left)
+            else:
+                left = []
+
+            if i._successors_right is not None:
+                right = list(i._successors_right)
+            else:
+                right = []
+
+            if i._successors_straight is not None:
+                straight = list(i._successors_straight)
+            else:
+                straight = []
+
+            if i._incoming_lanelets is not None:
+                inc = list(i._incoming_lanelets)
+            else:
+                inc = []
+            x = x + left + right + straight + inc
+
+        for idx in x:
+            lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id( lanelet_id=idx)
+            if lanelet:
+                lanelet_ids.append(idx)
+                if lanelet.adj_left:
+                    lanelet_ids.append(lanelet.adj_left)
+                if lanelet.adj_right:
+                    lanelet_ids.append(lanelet.adj_right)
+        lanelet_ids = set(lanelet_ids)
+        lanelet_ids = list(lanelet_ids)        
+        
+        
+        # translating the lanelets
+        for lanelet_id in lanelet_ids:
             lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id(lanelet_id)
             lanelet.translate_rotate(np.array([x_translation, y_translation]), 0)
 
