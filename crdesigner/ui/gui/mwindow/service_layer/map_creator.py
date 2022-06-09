@@ -5,7 +5,7 @@ from commonroad.scenario.intersection import IntersectionIncomingElement
 from commonroad.scenario.lanelet import RoadUser, LaneletNetwork, Lanelet, LineMarking, LaneletType, StopLine
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.traffic_sign import *
-
+import numpy as np
 
 class MapCreator:
     """
@@ -781,6 +781,106 @@ class MapCreator:
             angle = 2 * np.pi - angle
 
         return angle
+
+    @staticmethod
+    def translate_rotate_intersection(intersection : Intersection,
+                               translation: np.ndarray, 
+                               angle: float,
+                               network:LaneletNetwork): 
+        """_summary_
+
+        Args:
+            intersectio (Intersection): intersection, which we want to translate
+            translation (np.ndarray): translation vector [x_off, y_off] in x- and y-direction
+            angle (float): rotation angle in radian (counter-clockwise)
+            network (LaneletNetwork): _description_
+        """
+        lanelet_ids = []
+        traffic_sign_ids = []
+        traffic_light_ids = []
+        
+        
+        lanelet_ids = MapCreator.get_intersection_lanelets(intersection = intersection, network = network)       
+    
+        # get intersection traffic signs
+        for lanelet_id in lanelet_ids:
+            lanelet = network.find_lanelet_by_id(lanelet_id)
+            traffic_sign_ids = traffic_sign_ids + list(lanelet.traffic_signs)
+            traffic_light_ids = traffic_light_ids + list(lanelet.traffic_lights)
+            
+            
+         # translating the lanelets
+        for lanelet_id in lanelet_ids:
+            lanelet = network.find_lanelet_by_id(lanelet_id)
+            lanelet.translate_rotate(translation, angle)
+            
+        # translate intersection's traffic lights
+        for traffic_light_id  in traffic_light_ids: 
+            traffic_light = network.find_traffic_light_by_id(traffic_light_id)
+            if not traffic_light is None:
+                traffic_light.translate_rotate(translation, angle)
+        
+        # translate intersection's traffic signs 
+        for traffic_sign_id  in traffic_sign_ids: 
+            traffic_sign = network.find_traffic_sign_by_id(traffic_sign_id)
+            if not traffic_sign is None:
+                traffic_sign.translate_rotate(translation, angle)
+        
+        
+        
+        
+
+    @staticmethod
+    def get_intersection_lanelets(intersection: Intersection , network : LaneletNetwork) -> List[int]:
+        """_summary_
+        Args:
+            intersection (Intersection)
+            network (LaneletNetwork)
+
+        Returns:
+            List[int]: list of all lanelets that construct the intersection given
+        """
+        lanelet_ids = []
+        x = []
+        for i in intersection.incomings:
+            if i._successors_left is not None:
+                left = list(i._successors_left)
+            else:
+                left = []
+
+            if i._successors_right is not None:
+                right = list(i._successors_right)
+            else:
+                right = []
+
+            if i._successors_straight is not None:
+                straight = list(i._successors_straight)
+            else:
+                straight = []
+
+            if i._incoming_lanelets is not None:
+                inc = list(i._incoming_lanelets)
+            else:
+                inc = []
+            x = x + left + right + straight + inc
+
+        for idx in x:
+            lanelet = LaneletNetwork.find_lanelet_by_id(network, lanelet_id=idx)
+            if lanelet:
+                lanelet_ids.append(idx)
+                if lanelet.adj_left:
+                    lanelet_ids.append(lanelet.adj_left)
+                if lanelet.adj_right:
+                    lanelet_ids.append(lanelet.adj_right)
+        lanelet_ids = set(lanelet_ids)
+        lanelet_ids = list(lanelet_ids)
+
+        return lanelet_ids
+
+
+
+
+
 
     @staticmethod
     def fit_intersection_to_predecessor(predecessor, successor, intersection, network):

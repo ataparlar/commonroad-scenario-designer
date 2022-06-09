@@ -1317,13 +1317,6 @@ class RoadNetworkToolbox(QDockWidget):
         _summary_: translate intersections by user-defined x- and y-values.
         """
         
-        base_lanelet_ids = []
-        lanelet_ids = []
-        traffic_sign_ids = []
-        traffic_light_ids = []
-        
-        
-        
         if self.road_network_toolbox_ui.selected_intersection.currentText() in ["", "None"]:
             return
         
@@ -1342,65 +1335,11 @@ class RoadNetworkToolbox(QDockWidget):
         # Finding intersection.
         selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
         intersection = self.current_scenario.lanelet_network.find_intersection_by_id(selected_intersection_id)
-
-        #TODO: refactor this part
-        # Getting lanelet's ids of the 
-        for i in intersection.incomings:
-            if i._successors_left is not None:
-                left = list(i._successors_left)
-            else:
-                left = []
-
-            if i._successors_right is not None:
-                right = list(i._successors_right)
-            else:
-                right = []
-
-            if i._successors_straight is not None:
-                straight = list(i._successors_straight)
-            else:
-                straight = []
-
-            if i._incoming_lanelets is not None:
-                inc = list(i._incoming_lanelets)
-            else:
-                inc = []
-            base_lanelet_ids = base_lanelet_ids + left + right + straight + inc
-
-        for idx in base_lanelet_ids:
-            lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id( lanelet_id=idx)
-            if lanelet:
-                lanelet_ids.append(idx)
-                if lanelet.adj_left:
-                    lanelet_ids.append(lanelet.adj_left)
-                if lanelet.adj_right:
-                    lanelet_ids.append(lanelet.adj_right)
-        lanelet_ids = set(lanelet_ids)
-        lanelet_ids = list(lanelet_ids)        
-    
-        # get intersection traffic signs
-        for lanelet_id in lanelet_ids:
-            lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id(lanelet_id)
-            traffic_sign_ids = traffic_sign_ids + list(lanelet.traffic_signs)
-            traffic_light_ids = traffic_light_ids + list(lanelet.traffic_lights)
-            
-            
-         # translating the lanelets
-        for lanelet_id in lanelet_ids:
-            lanelet = self.current_scenario.lanelet_network.find_lanelet_by_id(lanelet_id)
-            lanelet.translate_rotate(np.array([x_translation, y_translation]), 0)
-            
-        # translate intersection's traffic lights
-        for traffic_light_id  in traffic_light_ids: 
-            traffic_light = self.current_scenario.lanelet_network.find_traffic_light_by_id(traffic_light_id)
-            if not traffic_light is None:
-                traffic_light.translate_rotate(np.array([x_translation, y_translation]), 0)
         
-        # translate intersection's traffic signs 
-        for traffic_sign_id  in traffic_sign_ids: 
-            traffic_sign = self.current_scenario.lanelet_network.find_traffic_sign_by_id(traffic_sign_id)
-            if not traffic_sign is None:
-                traffic_sign.translate_rotate(np.array([x_translation, y_translation]), 0)
-        
+        # Translating the intersection
+        MapCreator.translate_rotate_intersection(intersection = intersection, 
+                                                 translation = np.array([x_translation, y_translation]),
+                                                angle = 0,
+                                                network = self.current_scenario.lanelet_network)
         
         self.callback(self.current_scenario)
