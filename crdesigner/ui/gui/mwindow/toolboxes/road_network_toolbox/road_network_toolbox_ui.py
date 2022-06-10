@@ -21,11 +21,11 @@ class RoadNetworkToolboxUI(Toolbox):
         """reimplement this to define all your sections
         and add them as (title, widget) tuples to self.sections
         """
-        self.sections.append(self.create_intersection_widget())
         self.sections.append(self.create_lanelet_widget())
         self.sections.append(self.create_lanelet_operations_widget())
         self.sections.append(self.create_traffic_sign_widget())
         self.sections.append(self.create_traffic_light_widget())
+        self.sections.append(self.create_intersection_widget())
 
     def create_lanelet_widget(self):
         label_general = QLabel("Lanelet Attributes")
