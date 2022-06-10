@@ -21,11 +21,11 @@ class RoadNetworkToolboxUI(Toolbox):
         """reimplement this to define all your sections
         and add them as (title, widget) tuples to self.sections
         """
+        self.sections.append(self.create_intersection_widget())
         self.sections.append(self.create_lanelet_widget())
         self.sections.append(self.create_lanelet_operations_widget())
         self.sections.append(self.create_traffic_sign_widget())
         self.sections.append(self.create_traffic_light_widget())
-        self.sections.append(self.create_intersection_widget())
 
     def create_lanelet_widget(self):
         label_general = QLabel("Lanelet Attributes")
@@ -576,6 +576,14 @@ class RoadNetworkToolboxUI(Toolbox):
         self.intersection_translate_y_unit_label = QLabel("[m]")
         
 
+        self.button_rotate_intersection = QPushButton("Rotate")
+        self.button_rotate_intersection.setFixedWidth(100)
+        self.intersection_rotation_angle = QSpinBox()
+        self.intersection_rotation_angle.setMinimum(-180)
+        self.intersection_rotation_angle.setMaximum(180)
+        self.intersection_rotation_degree_label = QLabel("[deg]")
+
+
         intersection_templates_layout = QFormLayout()
         intersection_template_groupbox = QGroupBox()
         intersection_template_groupbox.setLayout(intersection_templates_layout)
@@ -609,6 +617,14 @@ class RoadNetworkToolboxUI(Toolbox):
         intersection_operations_translation_groupbox_layout.addWidget(self.intersection_translate_y_unit_label, 1, 6)
         intersection_adding_updating_layout.addRow(intersection_operations_translation_groupbox)
         
+        # Adding rotation grid to intersection UI
+        intersection_operations_translation_groupbox_layout = QGridLayout()
+        intersection_operations_rotation_groupbox = QGroupBox()
+        intersection_operations_rotation_groupbox.setLayout(intersection_operations_translation_groupbox_layout)
+        intersection_operations_translation_groupbox_layout.addWidget(self.button_rotate_intersection, 0, 0)
+        intersection_operations_translation_groupbox_layout.addWidget(self.intersection_rotation_angle, 0, 1)
+        intersection_operations_translation_groupbox_layout.addWidget(self.intersection_rotation_degree_label, 0, 2)
+        intersection_adding_updating_layout.addRow(intersection_operations_rotation_groupbox)
         
         intersection_incoming_layout = QFormLayout()
         intersection_incoming_groupbox = QGroupBox()

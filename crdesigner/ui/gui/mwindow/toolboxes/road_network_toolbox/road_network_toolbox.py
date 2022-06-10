@@ -91,6 +91,7 @@ class RoadNetworkToolbox(QDockWidget):
         self.road_network_toolbox_ui.selected_intersection.currentTextChanged.connect(
             lambda: self.update_intersection_information())
         self.road_network_toolbox_ui.button_translate_intersection.clicked.connect(lambda: self.translate_intersection())
+        self.road_network_toolbox_ui.button_rotate_intersection.clicked.connect(lambda: self.rotate_intersection())
 
         self.road_network_toolbox_ui.button_add_incoming.clicked.connect(lambda: self.add_incoming_to_table())
         self.road_network_toolbox_ui.button_remove_incoming.clicked.connect(lambda: self.remove_incoming())
@@ -1351,6 +1352,39 @@ class RoadNetworkToolbox(QDockWidget):
         MapCreator.translate_rotate_intersection(intersection = intersection, 
                                                  translation = np.array([x_translation, y_translation]),
                                                 angle = 0,
+                                                network = self.current_scenario.lanelet_network)
+        
+        self.callback(self.current_scenario)
+        
+        
+        
+    
+    def rotate_intersection(self):
+        """
+        _summary_: translate intersections by user-defined x- and y-values.
+        """
+        
+        # Getting rotation details.
+        
+        if self.road_network_toolbox_ui.selected_intersection.currentText() in ["", "None"]:
+            return
+        
+        try:
+            angle = float(self.road_network_toolbox_ui.intersection_rotation_angle.text())
+        except ValueError:
+            return
+    
+        
+            
+            
+        # Finding intersection.
+        selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
+        intersection = self.current_scenario.lanelet_network.find_intersection_by_id(selected_intersection_id)
+        
+        # Translating the intersection
+        MapCreator.translate_rotate_intersection(intersection = intersection, 
+                                                translation = np.array([0, 0]),
+                                                angle = np.deg2rad(angle),
                                                 network = self.current_scenario.lanelet_network)
         
         self.callback(self.current_scenario)
