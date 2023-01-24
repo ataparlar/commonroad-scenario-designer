@@ -193,9 +193,9 @@ class AnimatedViewer:
         timesteps = [
             obstacle.prediction.occupancy_set[-1].time_step
             for obstacle in self.current_scenario.dynamic_obstacles
-            #if obstacles in code do not have prediction the simulation may not work. At least it does not crash with this if cacse
-            if obstacle.prediction
-        ]
+            # if obstacles in code do not have prediction the simulation may not work.
+            # At least it does not crash with this if case
+            if obstacle.prediction]
         self.max_timestep = np.max(timesteps) if timesteps else 0
         return self.max_timestep
 
@@ -231,9 +231,10 @@ class AnimatedViewer:
                 'time_begin': time_step,
             }
         else:
-            draw_params = {
-                'time_begin': self.time_step.value - 1,
-            }
+            time_begin = self.time_step.value
+            if time_begin != 0:
+                time_begin -= 1
+            draw_params = {'time_begin': time_begin}
 
         self.dynamic.draw_scenario(self.current_scenario, self.current_pps, draw_params=draw_params)
 
