@@ -41,6 +41,8 @@ class ObstacleProfileToolboxUI(Toolbox):
 
         self.selected_obstacle = QComboBox()
 
+        self.obstacle_button = QPushButton("Obstacles", self)
+
         self.obstacle_shape = QComboBox()
         self.obstacle_shape.addItem("Rectangle")
         self.obstacle_shape.addItem("Circle")
@@ -67,7 +69,7 @@ class ObstacleProfileToolboxUI(Toolbox):
         self.init_position()
 
         layout_obstacle_buttons = QFormLayout()
-        layout_obstacle_buttons.addRow("Selected Obstacle ID:", self.selected_obstacle)
+        layout_obstacle_buttons.addRow("Select Obstacle ID:", self.obstacle_button)
         self.layout_obstacles.addLayout(layout_obstacle_buttons)
 
         layout_obstacle_state_vis_groupbox = QFormLayout()

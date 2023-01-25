@@ -27,7 +27,7 @@ class Settings:
 
     def connect_events(self):
         """ connect buttons to callables """
-        #self.window.btn_restore_defaults.clicked.connect(self.restore_default_button)
+        # self.window.btn_restore_defaults.clicked.connect(self.restore_default_button)
         self.window.button_ok.clicked.connect(self.apply_close)
         self.window.button_cancel.clicked.connect(self.close)
         self.window.button_settodefault.clicked.connect(self.clicked)

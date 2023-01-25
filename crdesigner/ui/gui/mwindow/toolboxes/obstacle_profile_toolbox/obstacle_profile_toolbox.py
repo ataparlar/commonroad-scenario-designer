@@ -17,6 +17,7 @@ if SUMO_AVAILABLE:
 
 from crdesigner.ui.gui.mwindow.toolboxes.obstacle_profile_toolbox.obstacle_profile_toolbox_ui import \
     ObstacleProfileToolboxUI
+from crdesigner.ui.gui.mwindow.toolboxes.obstacle_profile_toolbox.obstacle_selection import Obstacle_Selection
 
 
 class ObstacleProfileToolbox(QDockWidget):
@@ -33,13 +34,14 @@ class ObstacleProfileToolbox(QDockWidget):
         self.callback = callback
         self.obstacle_profile_toolbox_ui = ObstacleProfileToolboxUI(text_browser, mwindow)
         self.adjust_ui()
-        self.connect_gui_elements()
+        self.connect_gui_elements(mwindow)
         self.tmp_folder = tmp_folder
         self.text_browser = text_browser
         self.update_ongoing = False
         self.amount_obstacles = 0
         self.canvas = DynamicCanvas()
         self.obstacle_color = None
+        self.obstacle_selection = None
 
         # for profile visualisation
         self.sel_point = None
@@ -62,7 +64,7 @@ class ObstacleProfileToolbox(QDockWidget):
         self.setWidget(self.obstacle_profile_toolbox_ui)
         self.obstacle_profile_toolbox_ui.setMinimumWidth(450)
 
-    def connect_gui_elements(self):
+    def connect_gui_elements(self, mwindow):
         """
         adds functionality to gui elements like buttons, menus etc
         """
@@ -77,12 +79,18 @@ class ObstacleProfileToolbox(QDockWidget):
 
         self.current_time.valueChanged.connect(lambda: self.update_animation())
 
+        self.obstacle_profile_toolbox_ui.obstacle_button.clicked.connect(
+                lambda: self.show_obstacle_selection(mwindow))
+
     def refresh_toolbox(self, scenario: Scenario):
         self.current_scenario = scenario
         self.initialize_toolbox()
 
     def initialize_toolbox(self):
         self.initialize_obstacle_profile_information()
+
+    def show_obstacle_selection(self, parent):
+        self.obstacle_selection = Obstacle_Selection(parent)
 
     def initialize_obstacle_profile_information(self):
         """
