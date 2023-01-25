@@ -18,6 +18,8 @@ from crdesigner.ui.gui.mwindow.toolboxes.road_network_toolbox.create_road_networ
 from crdesigner.ui.gui.mwindow.toolboxes.converter_toolbox.create_converter_toolbox import create_converter_toolbox
 from crdesigner.ui.gui.mwindow.toolboxes.obstacle_toolbox.create_obstacle_toolbox import create_obstacle_toolbox
 from crdesigner.ui.gui.mwindow.toolboxes.obstacle_profile_toolbox.create_obstacle_profile_toolbox import create_obstacle_profile_toolbox
+from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.commonroad_viewer.service_layer.draw_params_updater import ColorSchema
+
 
 import logging
 from PyQt5.QtWidgets import *
@@ -43,7 +45,6 @@ class MWindow(QMainWindow, Ui_mainWindow):
         # GUI attributes
         self.road_network_toolbox = None
         self.obstacle_toolbox = None
-        self.obastacle_profile_toolbox = None
         self.map_converter_toolbox = None
         self.crdesigner_console_wrapper = None  # this can be removed
         self.play_activated = False
@@ -59,7 +60,6 @@ class MWindow(QMainWindow, Ui_mainWindow):
         self.crdesigner_console_wrapper = CRDesignerConsoleWrapper(mwindow=self)
         self.road_network_toolbox = create_road_network_toolbox(mwindow=self)
         self.obstacle_toolbox = create_obstacle_toolbox(mwindow=self)
-        self.obastacle_profile_toolbox = create_obstacle_profile_toolbox(mwindow=self)
         self.converter_toolbox = create_converter_toolbox(mwindow=self)
         self.top_bar_wrapper = TopBarWrapper(mwindow=self)
         # IMPORTANT: this has to be after the toolboxes, otherwise the handle used in the fileactions to the viewer_dock
@@ -103,7 +103,6 @@ class MWindow(QMainWindow, Ui_mainWindow):
     def initialize_toolboxes(self):
         self.road_network_toolbox.initialize_toolbox()
         self.obstacle_toolbox.initialize_toolbox()
-        self.obastacle_profile_toolbox.initialize_toolbox()
 
     def check_scenario(self, scenario) -> int:
         """
@@ -142,7 +141,6 @@ class MWindow(QMainWindow, Ui_mainWindow):
 
         self.road_network_toolbox.road_network_toolbox_ui.update_window()
         self.obstacle_toolbox.obstacle_toolbox_ui.update_window()
-        self.obastacle_profile_toolbox.obstacle_profile_toolbox_ui.update_window()
         self.converter_toolbox.converter_toolbox.update_window()
         self.animated_viewer_wrapper.update_window()
         self.menubar.setStyleSheet('background-color: '+ self.colorscheme()["secondbackground"] + '; color: ' + self.colorscheme()["color"])
