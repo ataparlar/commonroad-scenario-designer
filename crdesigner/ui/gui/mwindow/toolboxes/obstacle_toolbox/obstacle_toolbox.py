@@ -1272,7 +1272,6 @@ class ObstacleToolbox(QDockWidget):
             self.clear_obstacle_fields()
             self.obstacle_toolbox_ui.obstacle_state_variable.clear()
             self.obstacle_toolbox_ui.figure.clear()
-            self.obstacle_toolbox_ui.canvas.draw()
 
     def clear_obstacle_fields(self):
         """
@@ -1310,7 +1309,6 @@ class ObstacleToolbox(QDockWidget):
             try:
                 obstacle_id = self.get_current_obstacle_id()
                 selected_obstacle = self.get_current_obstacle()
-                self.canvas.remove_obstacle(obstacle_id)
                 self.current_scenario.remove_obstacle(selected_obstacle)
                 self.callback(self.current_scenario)
                 self.amount_obstacles -= 1
