@@ -2,6 +2,7 @@
 from PyQt5 import QtGui
 from PyQt5.QtGui import QPalette, QBrush, QColor
 
+
 from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.commonroad_viewer import AnimatedViewer
 from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 
@@ -58,6 +59,7 @@ class AnimatedViewerWrapper:
         elif isinstance(selected_object, Obstacle):
             self.mwindow.obstacle_toolbox.obstacle_toolbox_ui.selected_obstacle.setCurrentText(
                     str(selected_object.obstacle_id))
+            self.mwindow.obstacle_toolbox.active_obstacle = selected_object
         elif isinstance(selected_object, PosB):
             for button in self.mwindow.road_network_toolbox.road_network_toolbox_ui.position_buttons:
                 if button.button_pressed:
