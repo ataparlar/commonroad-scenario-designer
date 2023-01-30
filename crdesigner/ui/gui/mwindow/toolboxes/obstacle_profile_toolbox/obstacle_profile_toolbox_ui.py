@@ -43,7 +43,6 @@ class ObstacleProfileToolboxUI(Toolbox):
 
         self.obstacle_button = QPushButton("Obstacles", self)
 
-
         self.obstacle_shape = QComboBox()
         self.obstacle_shape.addItem("Rectangle")
         self.obstacle_shape.addItem("Circle")

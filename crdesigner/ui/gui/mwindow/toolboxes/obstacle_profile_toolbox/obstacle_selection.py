@@ -13,8 +13,6 @@ class Obstacle_Selection:
         self.window = Obstacle_Selection_Ui()
 
         self.window.setupUI(self.obstacle_selection_window, self.cr_designer)
-        if SUMO_AVAILABLE:
-            self.sumo_settings = sumo.SUMOSettings(self, config=parent.obstacle_toolbox.sumo_simulation.config)
         self.connect_events()
         self.obstacle_selection_window.show()
         self.canvas = DynamicCanvas()

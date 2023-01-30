@@ -17,6 +17,7 @@ WIDTHF = 280
 WIDTHM = 390
 FACTOR = 0.7
 
+
 class Ui_Settings(object):
     def setupUi(self, Settings, mwindow):
         self.mwindow = mwindow
@@ -32,12 +33,11 @@ class Ui_Settings(object):
         self.tabBar = QtWidgets.QTabBar()
         self.tabWidget.setTabBar(self.tabBar)
 
-
         self.frame = QtWidgets.QFrame(self.centralwidget)
         self.frameLayout = QtWidgets.QHBoxLayout(self.frame)
         self.frame.setLayout(self.frameLayout)
-        self.frame.setMaximumSize(int(1700*FACTOR), 43)
-        self.frame.setMinimumSize(int(1700*FACTOR), 43)
+        self.frame.setMaximumSize(int(1700 * FACTOR), 43)
+        self.frame.setMinimumSize(int(1700 * FACTOR), 43)
 
         self.button_cancel = QtWidgets.QPushButton(self.frame)
         self.button_cancel.setObjectName("button_cancel")
@@ -69,7 +69,7 @@ class Ui_Settings(object):
         self.statusbar.setObjectName("statusbar")
         Settings.setStatusBar(self.statusbar)
 
-        #adding different setting tabs
+        # adding different setting tabs
         self.gui_settings = gui.UIGUISettings(HEIGHT, COLUMNS, WIDTHF, WIDTHM, FACTOR)
         self.gui_settings.setupUi(self.tabWidget)
         self.tabWidget.addTab(self.gui_settings.scrollArea, "GUI")
@@ -118,6 +118,3 @@ class Ui_Settings(object):
         self.button_cancel.setPalette(p)
         # set_to_default_button
         self.button_settodefault.setPalette(p)
-
-
-
