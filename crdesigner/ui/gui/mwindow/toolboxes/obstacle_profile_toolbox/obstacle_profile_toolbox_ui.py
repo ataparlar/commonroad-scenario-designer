@@ -52,10 +52,6 @@ class ObstacleProfileToolboxUI(Toolbox):
         obstalce_type_list = [e.value for e in ObstacleType]
         self.obstacle_type.addItems(obstalce_type_list)
 
-        self.obstacle_dyn_stat = QComboBox()
-        self.obstacle_dyn_stat.addItem("Static")
-        self.obstacle_dyn_stat.addItem("Dynamic")
-
         self.animation = QCheckBox("Animate profile")
         self.animation.setChecked(True)
         self.layout_obstacles.addWidget(self.animation)
@@ -144,29 +140,6 @@ class ObstacleProfileToolboxUI(Toolbox):
         self.obstacle_orientation.setValidator(QIntValidator())
         self.obstacle_orientation.setMaxLength(4)
         self.obstacle_orientation.setAlignment(Qt.AlignRight)
-
-    def toggle_sections(self):
-        """
-        changes obstacle based on shape
-        """
-        if self.obstacle_shape.currentText() == "Circle":
-            self.init_circle_fields
-            self.init_position
-
-        elif self.obstacle_shape.currentText() == "Rectangle":
-            self.init_rectangle_fields
-            self.init_position
-
-        elif self.obstacle_shape.currentText() == "Polygon":
-            self.vertices_x = []
-            self.vertices_y = []
-            self.polygon_row = []
-            self.remove_vertice_btn = []
-            self.polygon_label = []
-            self.amount_vertices = 0
-
-            for i in range(3):
-                self.add_vertice(self)
 
     def add_vertice(self):
         """
