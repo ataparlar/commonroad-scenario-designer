@@ -1,4 +1,5 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
+from PyQt5.QtWidgets import QListWidget, QCheckBox
 
 HEIGHT = 25
 COLUMNS = 2
@@ -11,16 +12,17 @@ class Obstacle_Selection_Ui(object):
     def __init__(self):
         self.selection = None
         self.mwindow = None
+        self.selected_obstacles = [""]
 
     def setupUI(self, selection, mwindow):
         self.mwindow = mwindow
         self.selection = selection
         self.selection.setObjectName("Obstacle Selection")
-        self.selection.resize(1820 * FACTOR, 1150 * FACTOR)
+        self.selection.resize(1000 * FACTOR, 1000 * FACTOR)
         self.centralwidget = QtWidgets.QWidget(selection)
         self.centralwidget.setObjectName("centralwidget")
         self.centralLayout = QtWidgets.QVBoxLayout(self.centralwidget)
-        self.centralwidget.setObjectName("centralLayout")
+        self.centralLayout.setObjectName("centralLayout")
         self.tabWidget = QtWidgets.QTabWidget(self.centralwidget)
         self.centralLayout.addWidget(self.tabWidget)
         self.tabBar = QtWidgets.QTabBar()
@@ -29,31 +31,26 @@ class Obstacle_Selection_Ui(object):
         self.frame = QtWidgets.QFrame(self.centralwidget)
         self.frameLayout = QtWidgets.QHBoxLayout(self.frame)
         self.frame.setLayout(self.frameLayout)
-        self.frame.setMaximumSize(int(1700 * FACTOR), 43)
-        self.frame.setMinimumSize(int(1700 * FACTOR), 43)
-
-        self.frame = QtWidgets.QFrame(self.centralwidget)
-        self.frameLayout = QtWidgets.QHBoxLayout(self.frame)
-        self.frame.setLayout(self.frameLayout)
-        self.frame.setMaximumSize(int(1700 * FACTOR), 43)
-        self.frame.setMinimumSize(int(1700 * FACTOR), 43)
+        self.frame.setMaximumSize(int(1000 * FACTOR), 43)
+        self.frame.setMinimumSize(int(1000 * FACTOR), 43)
 
         self.button_ok = QtWidgets.QPushButton(self.frame)
         self.button_ok.setObjectName("button_ok")
         self.button_ok.setMaximumSize(150, 40)
 
-        self.button_cancel = QtWidgets.QPushButton(self.frame)
-        self.button_cancel.setObjectName("button_cancel")
-        self.button_cancel.setMaximumSize(150, 40)
-
-        self.space = QtWidgets.QLabel()
-        self.frameLayout.addWidget(self.space)
-        self.frameLayout.addWidget(self.button_cancel)
-        self.frameLayout.addWidget(self.button_ok)
-
         self.centralLayout.addWidget(self.frame)
 
         selection.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(selection)
+        self.menubar.setGeometry(QtCore.QRect(0, 0, 990, 23))
+        self.menubar.setObjectName("menubar")
+        selection.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(selection)
+        self.statusbar.setObjectName("statusbar")
+        selection.setStatusBar(self.statusbar)
+
+        # add the obstacles
+        self.gui_obstacles = self.ui_gui_obstacle(self.tabWidget)
 
         self.update_window()
         self.retranslateUi(selection)
@@ -63,7 +60,39 @@ class Obstacle_Selection_Ui(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "Obstacle Selection"))
         self.button_ok.setText(_translate("MainWindow", "Ok"))
-        self.button_cancel.setText(_translate("MainWindow", "Cancel"))
+
+    def ui_gui_obstacle(self, tabWidget):
+        self.scrollArea = QtWidgets.QScrollArea(tabWidget)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollArea.setObjectName("scrollArea")
+        self.scrollAreaLayout = QtWidgets.QGridLayout(self.scrollArea)
+
+        self.contentWrapper = QtWidgets.QWidget()
+        self.contentWrapper.setObjectName("ContentWrapper")
+        self.HBoxLayout = QtWidgets.QHBoxLayout(self.contentWrapper)
+        self.HBoxLayout.setObjectName("gridLayout")
+        self.HBoxLayout.setAlignment(QtCore.Qt.AlignLeft)
+        self.HBoxLayout.setAlignment(QtCore.Qt.AlignTop)
+
+        self.content = QtWidgets.QWidget(self.contentWrapper)
+        self.content.setObjectName("scrollAreaWidgetContents")
+        self.formLayout = QtWidgets.QFormLayout(self.content)
+        self.formLayout.setObjectName("form")
+        self.content.setMinimumSize(860 * FACTOR, 820)
+        self.content.setLayout(self.formLayout)
+        self.HBoxLayout.addWidget(self.content)
+
+        if self.selected_obstacles not in ["", "None"]:
+            for obstacle in self.selected_obstacles:
+                self.checkbox = QCheckBox(self.content)
+                self.checkbox.setText("Obstacle: " + str(obstacle))
+                self.checkbox.setObjectName(str(obstacle))
+                self.HBoxLayout.addWidget(self.checkbox)
+                self.formLayout.addRow(self.checkbox)
+
+        self.scrollArea.setWidget(self.contentWrapper)
+
+        self.tabWidget.addTab(self.scrollArea, "Obstacles")
 
     def update_window(self):
         p = QtGui.QPalette()
@@ -80,7 +109,4 @@ class Obstacle_Selection_Ui(object):
         p.setColor(QtGui.QPalette.ColorRole.Button, QtGui.QColor(self.mwindow.colorscheme().highlight))
         p.setColor(QtGui.QPalette.ColorRole.Foreground, QtGui.QColor(self.mwindow.colorscheme().highlight_text))
         p.setColor(QtGui.QPalette.ColorRole.ButtonText, QtGui.QColor(self.mwindow.colorscheme().highlight_text))
-        self.tabBar.setPalette(p)
         self.button_ok.setPalette(p)
-        self.button_cancel.setPalette(p)
-

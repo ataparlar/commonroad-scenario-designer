@@ -5,37 +5,37 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 from commonroad.geometry.polyline_util import *
-from commonroad.geometry.shape import Rectangle, Circle, Polygon
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.obstacle import Obstacle, StaticObstacle, DynamicObstacle
 
 from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.gui_sumo_simulation import SUMO_AVAILABLE
 from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.commonroad_viewer.dynamic_canvas import DynamicCanvas
+from crdesigner.ui.gui.mwindow.toolboxes.obstacle_profile_toolbox.obstacle_selection_ui import Obstacle_Selection_Ui
 
 if SUMO_AVAILABLE:
     from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.gui_sumo_simulation import SUMOSimulation
 
 from crdesigner.ui.gui.mwindow.toolboxes.obstacle_profile_toolbox.obstacle_profile_toolbox_ui import \
     ObstacleProfileToolboxUI
-from crdesigner.ui.gui.mwindow.toolboxes.obstacle_profile_toolbox.obstacle_selection import Obstacle_Selection
 
 
 class ObstacleProfileToolbox(QDockWidget):
     def __init__(self, current_scenario: Scenario, callback, tmp_folder, text_browser, mwindow):
         super().__init__("Obstacle Profile Toolbox")
 
-        # slider is used to get the value
+        self.mwindow = mwindow
         self.current_time = QSlider(Qt.Horizontal)
         self.current_time.setValue(0)
         self.current_time.setMinimum(0)
         self.current_time.setMaximum(99)
-        mwindow.animated_viewer_wrapper.cr_viewer.time_step.subscribe(self.current_time.setValue)
+        self.mwindow.animated_viewer_wrapper.cr_viewer.time_step.subscribe(self.current_time.setValue)
 
         self.current_scenario = current_scenario
         self.callback = callback
-        self.obstacle_profile_toolbox_ui = ObstacleProfileToolboxUI(text_browser, mwindow)
+        self.obstacle_profile_toolbox_ui = ObstacleProfileToolboxUI(text_browser, self.mwindow)
+        self.obstacle_selection_ui = Obstacle_Selection_Ui()
         self.adjust_ui()
-        self.connect_gui_elements(mwindow)
+        self.connect_gui_elements()
         self.tmp_folder = tmp_folder
         self.text_browser = text_browser
         self.update_ongoing = False
@@ -65,7 +65,7 @@ class ObstacleProfileToolbox(QDockWidget):
         self.setWidget(self.obstacle_profile_toolbox_ui)
         self.obstacle_profile_toolbox_ui.setMinimumWidth(450)
 
-    def connect_gui_elements(self, mwindow):
+    def connect_gui_elements(self):
         """
         adds functionality to gui elements like buttons, menus etc
         """
@@ -75,10 +75,11 @@ class ObstacleProfileToolbox(QDockWidget):
         self.obstacle_profile_toolbox_ui.selected_obstacle.currentTextChanged.connect(
                 lambda: self.update_obstacle_information())
 
-        self.current_time.valueChanged.connect(lambda: self.update_animation())
+        self.current_time.valueChanged.connect(
+                lambda: self.update_animation())
 
         self.obstacle_profile_toolbox_ui.obstacle_button.clicked.connect(
-                lambda: self.show_obstacle_selection(mwindow))
+                lambda: self.show_obstacle_selection())
 
     def refresh_toolbox(self, scenario: Scenario):
         self.current_scenario = scenario
@@ -87,18 +88,13 @@ class ObstacleProfileToolbox(QDockWidget):
     def initialize_toolbox(self):
         self.initialize_obstacle_profile_information()
 
-    def show_obstacle_selection(self, parent):
-        self.obstacle_selection = Obstacle_Selection(parent)
-
     def initialize_obstacle_profile_information(self):
         """
         Initializes GUI elements with intersection information.
         """
-
-        self.obstacle_profile_toolbox_ui.selected_obstacle.clear()
-        self.obstacle_profile_toolbox_ui.selected_obstacle.addItems(
-                ["None"] + [str(item) for item in self.collect_obstacle_ids()])
-        self.obstacle_profile_toolbox_ui.selected_obstacle.setCurrentIndex(0)
+        self.obstacle_selection_ui.selected_obstacles.clear()
+        for obstacle in self.collect_obstacle_ids():
+            self.obstacle_selection_ui.selected_obstacles.append(str(obstacle))
 
     def collect_obstacle_ids(self) -> List[int]:
         """
@@ -337,3 +333,18 @@ class ObstacleProfileToolbox(QDockWidget):
         if len(time) != len(profile[0:self.current_time.value() + 1]):
             return
         self.draw_plot(time, profile[0:self.current_time.value() + 1])
+
+    def show_obstacle_selection(self):
+        self.obstacle_selection_window = QMainWindow()
+        self.window = Obstacle_Selection_Ui()
+
+        self.obstacle_selection_ui.setupUI(self.obstacle_selection_window, self.mwindow)
+        self.connect_events()
+        self.obstacle_selection_window.show()
+
+    def connect_events(self):
+        """ connect buttons to callables for the obstacle_selection"""
+        self.obstacle_selection_ui.button_ok.clicked.connect(self.close)
+
+    def close(self):
+        self.obstacle_selection_window.close()
