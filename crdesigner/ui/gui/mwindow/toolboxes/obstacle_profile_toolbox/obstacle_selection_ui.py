@@ -1,5 +1,5 @@
 from PyQt5 import QtCore, QtWidgets, QtGui
-from PyQt5.QtWidgets import QListWidget, QCheckBox
+from PyQt5.QtWidgets import QListWidget, QCheckBox, QMainWindow
 
 HEIGHT = 25
 COLUMNS = 2
@@ -9,17 +9,17 @@ FACTOR = 0.7
 
 
 class Obstacle_Selection_Ui(object):
-    def __init__(self):
-        self.selection = None
-        self.mwindow = None
-        self.selected_obstacles = [""]
-
-    def setupUI(self, selection, mwindow):
+    def __init__(self, mwindow):
+        self.selection = QMainWindow()
         self.mwindow = mwindow
-        self.selection = selection
+        self.selected_obstacles = []
+        self.setupUI()
+
+    def setupUI(self):
+        self.mwindow
         self.selection.setObjectName("Obstacle Selection")
         self.selection.resize(1000 * FACTOR, 1000 * FACTOR)
-        self.centralwidget = QtWidgets.QWidget(selection)
+        self.centralwidget = QtWidgets.QWidget(self.selection)
         self.centralwidget.setObjectName("centralwidget")
         self.centralLayout = QtWidgets.QVBoxLayout(self.centralwidget)
         self.centralLayout.setObjectName("centralLayout")
@@ -40,26 +40,27 @@ class Obstacle_Selection_Ui(object):
 
         self.centralLayout.addWidget(self.frame)
 
-        selection.setCentralWidget(self.centralwidget)
-        self.menubar = QtWidgets.QMenuBar(selection)
+        self.selection.setCentralWidget(self.centralwidget)
+        self.menubar = QtWidgets.QMenuBar(self.selection)
         self.menubar.setGeometry(QtCore.QRect(0, 0, 990, 23))
         self.menubar.setObjectName("menubar")
-        selection.setMenuBar(self.menubar)
-        self.statusbar = QtWidgets.QStatusBar(selection)
+        self.selection.setMenuBar(self.menubar)
+        self.statusbar = QtWidgets.QStatusBar(self.selection)
         self.statusbar.setObjectName("statusbar")
-        selection.setStatusBar(self.statusbar)
+        self.selection.setStatusBar(self.statusbar)
 
         # add the obstacles
         self.gui_obstacles = self.ui_gui_obstacle(self.tabWidget)
 
         self.update_window()
-        self.retranslateUi(selection)
-        QtCore.QMetaObject.connectSlotsByName(selection)
+        self.retranslateUi(self.selection)
+        QtCore.QMetaObject.connectSlotsByName(self.selection)
 
-    def retranslateUi(self, MainWindow):
-        _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Obstacle Selection"))
-        self.button_ok.setText(_translate("MainWindow", "Ok"))
+    def showSelection(self):
+        self.selection.show()
+
+    def closeSelection(self):
+        self.selection.close()
 
     def ui_gui_obstacle(self, tabWidget):
         self.scrollArea = QtWidgets.QScrollArea(tabWidget)
@@ -93,6 +94,11 @@ class Obstacle_Selection_Ui(object):
         self.scrollArea.setWidget(self.contentWrapper)
 
         self.tabWidget.addTab(self.scrollArea, "Obstacles")
+
+    def retranslateUi(self, MainWindow):
+        _translate = QtCore.QCoreApplication.translate
+        MainWindow.setWindowTitle(_translate("MainWindow", "Obstacle self.Selection"))
+        self.button_ok.setText(_translate("MainWindow", "Ok"))
 
     def update_window(self):
         p = QtGui.QPalette()

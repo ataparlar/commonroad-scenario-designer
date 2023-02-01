@@ -33,7 +33,7 @@ class ObstacleProfileToolbox(QDockWidget):
         self.current_scenario = current_scenario
         self.callback = callback
         self.obstacle_profile_toolbox_ui = ObstacleProfileToolboxUI(text_browser, self.mwindow)
-        self.obstacle_selection_ui = Obstacle_Selection_Ui()
+        self.obstacle_selection_ui = Obstacle_Selection_Ui(self.mwindow)
         self.adjust_ui()
         self.connect_gui_elements()
         self.tmp_folder = tmp_folder
@@ -96,6 +96,8 @@ class ObstacleProfileToolbox(QDockWidget):
         for obstacle in self.collect_obstacle_ids():
             self.obstacle_selection_ui.selected_obstacles.append(str(obstacle))
 
+        self.obstacle_selection_ui.setupUI()
+
     def collect_obstacle_ids(self) -> List[int]:
         """
         Collects IDs of all obstacles within a CommonRoad scenario.
@@ -132,6 +134,10 @@ class ObstacleProfileToolbox(QDockWidget):
         If non updated changes, these values come from the xyova array,
         otherwise directly from the obstacle state_list
         """
+        for i in range(self.obstacle_selection_ui.formLayout.count()):
+            if self.obstacle_selection_ui.formLayout.itemAt(i).widget().isChecked():
+                print(self.obstacle_selection_ui.formLayout.itemAt(i).widget().objectName())
+
         if self.obstacle_profile_toolbox_ui.selected_obstacle.currentText() not in ["",
                                                                                     "None"] and not self.update_ongoing:
             profile = None
@@ -335,16 +341,12 @@ class ObstacleProfileToolbox(QDockWidget):
         self.draw_plot(time, profile[0:self.current_time.value() + 1])
 
     def show_obstacle_selection(self):
-        self.obstacle_selection_window = QMainWindow()
-        self.window = Obstacle_Selection_Ui()
-
-        self.obstacle_selection_ui.setupUI(self.obstacle_selection_window, self.mwindow)
         self.connect_events()
-        self.obstacle_selection_window.show()
+        self.obstacle_selection_ui.showSelection()
 
     def connect_events(self):
         """ connect buttons to callables for the obstacle_selection"""
         self.obstacle_selection_ui.button_ok.clicked.connect(self.close)
 
     def close(self):
-        self.obstacle_selection_window.close()
+        self.obstacle_selection_ui.closeSelection()
