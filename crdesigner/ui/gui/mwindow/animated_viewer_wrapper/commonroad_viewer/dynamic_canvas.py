@@ -1,16 +1,14 @@
 import copy
-import math
-from typing import List, Union, Set
+from typing import List, Union
+import numpy as np
 
 import PyQt5
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import QSizePolicy
-from PyQt5.QtCore import Qt
 from PyQt5 import QtCore
-import numpy as np
-from commonroad.scenario.state import InputState, InitialState
-from matplotlib.backend_bases import MouseButton,MouseEvent
+
+from matplotlib.backend_bases import MouseButton
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
@@ -33,7 +31,6 @@ from .service_layer import update_draw_params_based_on_scenario
 from .service_layer import update_draw_params_dynamic_based_on_scenario
 from .service_layer import resize_lanelet_network
 from crdesigner.ui.gui.mwindow.service_layer import config
-
 
 from ...service_layer.map_creator import MapCreator
 
@@ -75,10 +72,6 @@ class DynamicCanvas(FigureCanvas):
 
         self.l_network = None
 
-        self.draw_trajectory_first_point = None  # trajectory mode
-        self.draw_trajectory_preview = None
-        self.waypoints_list = []
-
         self.draw_lanelet_first_point = None  # drawing mode
         self.draw_lanelet_first_point_object = None
         self.draw_lanelet_preview = None
@@ -98,7 +91,6 @@ class DynamicCanvas(FigureCanvas):
         # Set focus on canvas to detect key press events
         self.setFocusPolicy(QtCore.Qt.ClickFocus)
         self.setFocus()
-
         # any callbacks for interaction per mouse
         self.button_press_event_cid = self.mpl_connect('button_press_event', self.dynamic_canvas_click_callback)
         self.button_release_event_cid = self.mpl_connect('button_release_event', self.dynamic_canvas_release_callback)
@@ -336,7 +328,6 @@ class DynamicCanvas(FigureCanvas):
         self._update_map()
         # now do the lanelet selection
         self._select_lanelet()
-
         # call callback_function with latest mouse position to check if a position button is pressed
         temp_point_updated = self.animated_viewer.callback_function(PosB(str(self.latest_mouse_pos[0]),
                                                                          str(self.latest_mouse_pos[1])),
@@ -504,7 +495,6 @@ class DynamicCanvas(FigureCanvas):
                 draw_params_merged = _merge_dict(draw_params.copy(), obstacle_draw_params.copy())
             except Exception:
                 draw_params_merged = draw_params
-
             obj.draw(renderer=self.rnd, draw_params=draw_params_merged)
 
     def set_static_obstacle_color(self, obstacle_id: int, color: str = None):
@@ -729,47 +719,6 @@ class DynamicCanvas(FigureCanvas):
             self._select_lanelet(False, [[last_merged_index]])
         self.parent.road_network_toolbox.callback(self.scenario)
 
-    def activate_trajectory_mode(self, is_active: bool):
-        """
-               activates and deactivates trajectory mode
-
-               :param: bool to see if the trajectory mode is activated
-               """
-        if is_active:
-            obstacle = self.parent.obstacle_toolbox.active_obstacle
-            if obstacle is None:
-                return
-            x = obstacle.initial_state.position[0]
-            y = obstacle.initial_state.position[1]
-            state_list = obstacle.prediction.trajectory.state_list
-            state = state_list[-1]
-            self.waypoints_list.append((x, y))
-            if isinstance(state, InitialState):
-                self.draw_trajectory_first_point = [x, y]
-            else:
-                for s in state_list:
-                    self.waypoints_list.append((s.position[0], s.position[1]))
-                self.draw_trajectory_first_point = [obstacle.prediction.trajectory.final_state.position[0],
-                                                    obstacle.prediction.trajectory.final_state.position[1]]
-
-
-            self.mpl_disconnect(self.button_press_event_cid)
-            self.mpl_disconnect(self.button_release_event_cid)
-
-            self.button_press_event_cid = self.mpl_connect('button_press_event', self.draw_trajectory_line)
-            self.motion_notify_event_cid = self.mpl_connect('motion_notify_event', self.trajectory_mode_preview_line)
-        else:
-            if self.draw_trajectory_preview:
-                self.draw_trajectory_preview.pop(0).remove()
-            self.draw_trajectory_first_point = None
-            self.waypoints_list = []
-            self.mpl_disconnect(self.button_press_event_cid)
-            self.mpl_disconnect(self.motion_notify_event_cid)
-            self.button_release_event_cid = self.mpl_connect('button_release_event',
-                                                             self.dynamic_canvas_release_callback)
-            self.button_press_event_cid = self.mpl_connect('button_press_event', self.dynamic_canvas_click_callback)
-            self.reset_toolbar()
-            self.update_plot()
     def activate_drawing_mode(self, is_active):
         if is_active:
             self.mpl_disconnect(self.button_press_event_cid)
@@ -789,47 +738,6 @@ class DynamicCanvas(FigureCanvas):
             self.button_press_event_cid = self.mpl_connect('button_press_event', self.dynamic_canvas_click_callback)
             self.reset_toolbar()
             self.update_plot()
-
-    def draw_trajectory_line(self, mouse_event: MouseEvent):
-        """
-                       draws waypoints and line between waypoints on the canvas
-
-                       :param: mouse_event that was clicked on the canvas
-                       """
-        x2 = mouse_event.xdata
-        y2 = mouse_event.ydata
-
-        if mouse_event.button == MouseButton.RIGHT:
-            self.activate_trajectory_mode(False)
-            return
-        self.waypoints_list.append((x2, y2))
-        self.draw_trajectory_first_point = [x2, y2]
-        self.parent.obstacle_toolbox.record_trajectory_with_mouse(x2, y2)
-
-        for i in range(0, len(self.waypoints_list)):
-            self.ax.plot(self.waypoints_list[i][0], self.waypoints_list[i][1], marker="x", color="blue", zorder=21)
-            if i+1 != len(self.waypoints_list):
-                self.ax.plot([self.waypoints_list[i][0], self.waypoints_list[i+1][0]], [self.waypoints_list[i][1],
-                                                                                        self.waypoints_list[i+1][1]], color="blue", zorder=21)
-        self.update_plot()
-
-    def trajectory_mode_preview_line(self, mouse_move_event: MouseEvent):
-        """           draws preview line
-
-                       :param: mouse_event for the coordinates of the waypoint
-                               """
-        x = mouse_move_event.xdata
-        y = mouse_move_event.ydata
-        if not x:
-            return
-
-        if self.draw_trajectory_preview or (self.draw_trajectory_preview and not x and not y):
-            self.draw_trajectory_preview.pop(0).remove()
-        if self.draw_trajectory_first_point:
-            self.draw_trajectory_preview = self.ax.plot([x, self.draw_trajectory_first_point[0]],
-                                                     [y, self.draw_trajectory_first_point[1]], color="blue", zorder=21)
-
-        self.update_plot()
 
     def draw_lanelet(self, mouse_event):
         x = mouse_event.xdata
@@ -932,4 +840,3 @@ class DynamicCanvas(FigureCanvas):
             self.ax.plot(x, y, marker="x", color="blue", zorder=21)
         self.update_plot()
         self.num_lanelets = len(self.animated_viewer.current_scenario.lanelet_network.lanelets)
-

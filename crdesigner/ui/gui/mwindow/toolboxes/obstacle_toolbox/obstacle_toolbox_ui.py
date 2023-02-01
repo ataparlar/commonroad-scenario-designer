@@ -3,14 +3,11 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 from crdesigner.ui.gui.mwindow.toolboxes.toolbox_ui import Toolbox, PositionButton
 from crdesigner.ui.gui.mwindow.service_layer import config
-from commonroad.scenario.obstacle import ObstacleType
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
-from matplotlib.backends.backend_qt5agg import NavigationToolbar2QT as NavigationToolbar
 from matplotlib.figure import Figure
 
 # try to import sumo functionality
 from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.gui_sumo_simulation import SUMO_AVAILABLE
-from crdesigner.ui.gui.mwindow.top_bar_wrapper.toolbar_wrapper.toolbar_wrapper import _drawing_mode, _trajectory_mode
+from crdesigner.ui.gui.mwindow.top_bar_wrapper.toolbar_wrapper.toolbar_wrapper import _trajectory_mode
 
 if SUMO_AVAILABLE:
     from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.gui_sumo_simulation import SUMOSimulation

@@ -5,12 +5,12 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 
 from commonroad.geometry.polyline_util import *
-from commonroad.geometry.shape import Rectangle, Circle, Polygon
 from commonroad.scenario.scenario import Scenario
 from commonroad.scenario.obstacle import Obstacle, StaticObstacle, DynamicObstacle
 
 from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.gui_sumo_simulation import SUMO_AVAILABLE
 from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.commonroad_viewer.dynamic_canvas import DynamicCanvas
+from crdesigner.ui.gui.mwindow.toolboxes.obstacle_profile_toolbox.obstacle_selection_ui import Obstacle_Selection_Ui
 
 if SUMO_AVAILABLE:
     from crdesigner.ui.gui.mwindow.animated_viewer_wrapper.gui_sumo_simulation import SUMOSimulation
@@ -23,16 +23,17 @@ class ObstacleProfileToolbox(QDockWidget):
     def __init__(self, current_scenario: Scenario, callback, tmp_folder, text_browser, mwindow):
         super().__init__("Obstacle Profile Toolbox")
 
-        # slider is used to get the value
+        self.mwindow = mwindow
         self.current_time = QSlider(Qt.Horizontal)
         self.current_time.setValue(0)
         self.current_time.setMinimum(0)
         self.current_time.setMaximum(99)
-        mwindow.animated_viewer_wrapper.cr_viewer.time_step.subscribe(self.current_time.setValue)
+        self.mwindow.animated_viewer_wrapper.cr_viewer.time_step.subscribe(self.current_time.setValue)
 
         self.current_scenario = current_scenario
         self.callback = callback
-        self.obstacle_profile_toolbox_ui = ObstacleProfileToolboxUI(text_browser, mwindow)
+        self.obstacle_profile_toolbox_ui = ObstacleProfileToolboxUI(text_browser, self.mwindow)
+        self.obstacle_selection_ui = Obstacle_Selection_Ui()
         self.adjust_ui()
         self.connect_gui_elements()
         self.tmp_folder = tmp_folder
@@ -41,6 +42,7 @@ class ObstacleProfileToolbox(QDockWidget):
         self.amount_obstacles = 0
         self.canvas = DynamicCanvas()
         self.obstacle_color = None
+        self.obstacle_selection = None
 
         # for profile visualisation
         self.sel_point = None
@@ -70,13 +72,14 @@ class ObstacleProfileToolbox(QDockWidget):
         self.obstacle_profile_toolbox_ui.obstacle_state_variable.currentTextChanged.connect(
                 lambda: self.plot_obstacle_state_profile())
 
-        self.obstacle_profile_toolbox_ui.obstacle_shape.currentTextChanged.connect(
-                lambda: self.obstacle_profile_toolbox_ui.toggle_sections())
-
         self.obstacle_profile_toolbox_ui.selected_obstacle.currentTextChanged.connect(
                 lambda: self.update_obstacle_information())
 
-        self.current_time.valueChanged.connect(lambda: self.update_animation())
+        self.current_time.valueChanged.connect(
+                lambda: self.update_animation())
+
+        self.obstacle_profile_toolbox_ui.obstacle_button.clicked.connect(
+                lambda: self.show_obstacle_selection())
 
     def refresh_toolbox(self, scenario: Scenario):
         self.current_scenario = scenario
@@ -89,12 +92,9 @@ class ObstacleProfileToolbox(QDockWidget):
         """
         Initializes GUI elements with intersection information.
         """
-        self.clear_obstacle_fields()
-
-        self.obstacle_profile_toolbox_ui.selected_obstacle.clear()
-        self.obstacle_profile_toolbox_ui.selected_obstacle.addItems(
-                ["None"] + [str(item) for item in self.collect_obstacle_ids()])
-        self.obstacle_profile_toolbox_ui.selected_obstacle.setCurrentIndex(0)
+        self.obstacle_selection_ui.selected_obstacles.clear()
+        for obstacle in self.collect_obstacle_ids():
+            self.obstacle_selection_ui.selected_obstacles.append(str(obstacle))
 
     def collect_obstacle_ids(self) -> List[int]:
         """
@@ -259,68 +259,6 @@ class ObstacleProfileToolbox(QDockWidget):
             self.update_ongoing = True
             obstacle = self.get_current_obstacle()
 
-            if isinstance(obstacle.obstacle_shape, Rectangle):
-
-                if self.obstacle_profile_toolbox_ui.obstacle_shape.currentText() != "Rectangle":
-                    self.obstacle_profile_toolbox_ui.obstacle_shape.setCurrentIndex(0)
-
-                self.obstacle_profile_toolbox_ui.obstacle_width.setText(str(obstacle.obstacle_shape.width))
-                self.obstacle_profile_toolbox_ui.obstacle_length.setText(str(obstacle.obstacle_shape.length))
-                if isinstance(obstacle, StaticObstacle):
-                    self.obstacle_profile_toolbox_ui.obstacle_x_Position.setText(
-                            str(obstacle.initial_state.__getattribute__("position")[0]))
-                    self.obstacle_profile_toolbox_ui.obstacle_y_Position.setText(
-                            str(obstacle.initial_state.__getattribute__("position")[1]))
-                    self.obstacle_profile_toolbox_ui.obstacle_orientation.setText(
-                            str(math.degrees(obstacle.initial_state.__getattribute__("orientation"))))
-                else:
-                    self.obstacle_profile_toolbox_ui.obstacle_orientation.setText(
-                            str(math.degrees(obstacle.obstacle_shape.__getattribute__("orientation"))))
-
-            elif isinstance(obstacle.obstacle_shape, Circle):
-
-                if self.obstacle_profile_toolbox_ui.obstacle_shape.currentText() != "Circle":
-                    self.obstacle_profile_toolbox_ui.obstacle_shape.setCurrentIndex(1)
-
-                self.obstacle_profile_toolbox_ui.obstacle_radius.setText(str(obstacle.obstacle_shape.radius))
-                if isinstance(obstacle, StaticObstacle):
-                    self.obstacle_profile_toolbox_ui.obstacle_x_Position.setText(
-                            str(obstacle.initial_state.__getattribute__("position")[0]))
-                    self.obstacle_profile_toolbox_ui.obstacle_y_Position.setText(
-                            str(obstacle.initial_state.__getattribute__("position")[1]))
-
-            elif isinstance(obstacle.obstacle_shape, Polygon):
-                if self.obstacle_profile_toolbox_ui.obstacle_shape.currentText() != "Polygon":
-                    self.obstacle_profile_toolbox_ui.obstacle_shape.setCurrentIndex(2)
-
-                    # because numpy array has weird formatting I want to get rid of
-                temp = obstacle.obstacle_shape.vertices
-                vertices = temp.tolist()
-
-                # remove extra vertice(s) in toolbox
-                if len(vertices) - 1 < self.obstacle_profile_toolbox_ui.amount_vertices:
-                    j = self.obstacle_profile_toolbox_ui.amount_vertices - (len(vertices) - 1)
-                    for i in range(j):
-                        self.obstacle_profile_toolbox_ui.remove_vertice(i)
-
-                for i in range(len(vertices) - 1):
-                    # adds another vertice if there are too few in the toolbox
-                    if i >= self.obstacle_profile_toolbox_ui.amount_vertices:
-                        self.obstacle_profile_toolbox_ui.add_vertice()
-
-                    vertice_string_x = str(vertices[i][0])
-                    vertice_string_y = str(vertices[i][1])
-                    self.obstacle_profile_toolbox_ui.vertices_x[i].setText(vertice_string_x)
-                    self.obstacle_profile_toolbox_ui.vertices_y[i].setText(vertice_string_y)
-
-            if isinstance(obstacle, DynamicObstacle):
-
-                if self.obstacle_profile_toolbox_ui.obstacle_dyn_stat.currentText() != "Dynamic":
-                    self.obstacle_profile_toolbox_ui.obstacle_dyn_stat.setCurrentIndex(1)
-
-            elif self.obstacle_profile_toolbox_ui.obstacle_dyn_stat.currentText() != "Static":
-                self.obstacle_profile_toolbox_ui.obstacle_dyn_stat.setCurrentIndex(0)
-
             self.obstacle_profile_toolbox_ui.obstacle_type.setCurrentText(obstacle.obstacle_type.value)
             self.obstacle_profile_toolbox_ui.obstacle_state_variable.clear()
             state_variables = [var for var in obstacle.initial_state.attributes if var not in ["position", "time_step"]]
@@ -337,32 +275,9 @@ class ObstacleProfileToolbox(QDockWidget):
 
         # if set to "None": clear QLineEdits
         else:
-            self.clear_obstacle_fields()
             self.obstacle_profile_toolbox_ui.obstacle_state_variable.clear()
             self.obstacle_profile_toolbox_ui.figure.clear()
             self.obstacle_profile_toolbox_ui.canvas.draw()
-
-    def clear_obstacle_fields(self):
-        """
-        clears the obstacle QLineEdits
-        """
-        if self.obstacle_profile_toolbox_ui.obstacle_shape.currentText() == "Circle":
-            self.obstacle_profile_toolbox_ui.obstacle_radius.setText("")
-
-        elif self.obstacle_profile_toolbox_ui.obstacle_shape.currentText() == "Rectangle":
-            self.obstacle_profile_toolbox_ui.obstacle_width.setText("")
-            self.obstacle_profile_toolbox_ui.obstacle_length.setText("")
-            self.obstacle_profile_toolbox_ui.obstacle_orientation.setText("")
-
-        elif self.obstacle_profile_toolbox_ui.obstacle_shape.currentText() == "Polygon":
-            for i in range(self.obstacle_profile_toolbox_ui.amount_vertices):
-                self.obstacle_profile_toolbox_ui.vertices_x[i].setText("")
-                self.obstacle_profile_toolbox_ui.vertices_y[i].setText("")
-        if (
-                self.obstacle_profile_toolbox_ui.obstacle_dyn_stat.currentText() == "Static" and
-                self.obstacle_profile_toolbox_ui.obstacle_shape.currentText() != "Polygon"):
-            self.obstacle_profile_toolbox_ui.obstacle_x_Position.setText("")
-            self.obstacle_profile_toolbox_ui.obstacle_y_Position.setText("")
 
     def draw_plot(self, time, profile, xmin: float = None, xmax: float = None, ymin: float = None, ymax: float = None):
         """
@@ -418,3 +333,18 @@ class ObstacleProfileToolbox(QDockWidget):
         if len(time) != len(profile[0:self.current_time.value() + 1]):
             return
         self.draw_plot(time, profile[0:self.current_time.value() + 1])
+
+    def show_obstacle_selection(self):
+        self.obstacle_selection_window = QMainWindow()
+        self.window = Obstacle_Selection_Ui()
+
+        self.obstacle_selection_ui.setupUI(self.obstacle_selection_window, self.mwindow)
+        self.connect_events()
+        self.obstacle_selection_window.show()
+
+    def connect_events(self):
+        """ connect buttons to callables for the obstacle_selection"""
+        self.obstacle_selection_ui.button_ok.clicked.connect(self.close)
+
+    def close(self):
+        self.obstacle_selection_window.close()

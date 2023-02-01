@@ -41,6 +41,8 @@ class ObstacleProfileToolboxUI(Toolbox):
 
         self.selected_obstacle = QComboBox()
 
+        self.obstacle_button = QPushButton("Obstacles", self)
+
         self.obstacle_shape = QComboBox()
         self.obstacle_shape.addItem("Rectangle")
         self.obstacle_shape.addItem("Circle")
@@ -49,10 +51,6 @@ class ObstacleProfileToolboxUI(Toolbox):
         self.obstacle_type = QComboBox()
         obstalce_type_list = [e.value for e in ObstacleType]
         self.obstacle_type.addItems(obstalce_type_list)
-
-        self.obstacle_dyn_stat = QComboBox()
-        self.obstacle_dyn_stat.addItem("Static")
-        self.obstacle_dyn_stat.addItem("Dynamic")
 
         self.animation = QCheckBox("Animate profile")
         self.animation.setChecked(True)
@@ -67,7 +65,7 @@ class ObstacleProfileToolboxUI(Toolbox):
         self.init_position()
 
         layout_obstacle_buttons = QFormLayout()
-        layout_obstacle_buttons.addRow("Selected Obstacle ID:", self.selected_obstacle)
+        layout_obstacle_buttons.addRow("Select Obstacle ID:", self.obstacle_button)
         self.layout_obstacles.addLayout(layout_obstacle_buttons)
 
         layout_obstacle_state_vis_groupbox = QFormLayout()
@@ -142,29 +140,6 @@ class ObstacleProfileToolboxUI(Toolbox):
         self.obstacle_orientation.setValidator(QIntValidator())
         self.obstacle_orientation.setMaxLength(4)
         self.obstacle_orientation.setAlignment(Qt.AlignRight)
-
-    def toggle_sections(self):
-        """
-        changes obstacle based on shape
-        """
-        if self.obstacle_shape.currentText() == "Circle":
-            self.init_circle_fields
-            self.init_position
-
-        elif self.obstacle_shape.currentText() == "Rectangle":
-            self.init_rectangle_fields
-            self.init_position
-
-        elif self.obstacle_shape.currentText() == "Polygon":
-            self.vertices_x = []
-            self.vertices_y = []
-            self.polygon_row = []
-            self.remove_vertice_btn = []
-            self.polygon_label = []
-            self.amount_vertices = 0
-
-            for i in range(3):
-                self.add_vertice(self)
 
     def add_vertice(self):
         """
