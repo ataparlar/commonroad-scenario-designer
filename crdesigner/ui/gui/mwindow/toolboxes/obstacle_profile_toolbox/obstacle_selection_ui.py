@@ -12,7 +12,7 @@ class Obstacle_Selection_Ui(object):
     def __init__(self, mwindow):
         self.selection = QMainWindow()
         self.mwindow = mwindow
-        self.selected_obstacles = []
+        self.scenario_obstacles = []
         self.setupUI()
 
     def setupUI(self):
@@ -49,9 +49,7 @@ class Obstacle_Selection_Ui(object):
         self.statusbar.setObjectName("statusbar")
         self.selection.setStatusBar(self.statusbar)
 
-        # add the obstacles
-        self.gui_obstacles = self.ui_gui_obstacle(self.tabWidget)
-
+        self.ui_gui_obstacle(self.tabWidget)
         self.update_window()
         self.retranslateUi(self.selection)
         QtCore.QMetaObject.connectSlotsByName(self.selection)
@@ -83,13 +81,12 @@ class Obstacle_Selection_Ui(object):
         self.content.setLayout(self.formLayout)
         self.HBoxLayout.addWidget(self.content)
 
-        if self.selected_obstacles not in ["", "None"]:
-            for obstacle in self.selected_obstacles:
-                self.checkbox = QCheckBox(self.content)
-                self.checkbox.setText("Obstacle: " + str(obstacle))
-                self.checkbox.setObjectName(str(obstacle))
-                self.HBoxLayout.addWidget(self.checkbox)
-                self.formLayout.addRow(self.checkbox)
+        for obstacle in self.scenario_obstacles:
+            checkbox = QCheckBox(self.content)
+            checkbox.setText(str(obstacle))
+            checkbox.setObjectName(str(obstacle))
+            self.HBoxLayout.addWidget(checkbox)
+            self.formLayout.addRow(checkbox)
 
         self.scrollArea.setWidget(self.contentWrapper)
 

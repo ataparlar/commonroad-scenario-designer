@@ -75,11 +75,9 @@ class ObstacleProfileToolbox(QDockWidget):
         self.obstacle_profile_toolbox_ui.selected_obstacle.currentTextChanged.connect(
                 lambda: self.update_obstacle_information())
 
-        self.current_time.valueChanged.connect(
-                lambda: self.update_animation())
+        self.current_time.valueChanged.connect(lambda: self.update_animation())
 
-        self.obstacle_profile_toolbox_ui.obstacle_button.clicked.connect(
-                lambda: self.show_obstacle_selection())
+        self.obstacle_profile_toolbox_ui.obstacle_button.clicked.connect(lambda: self.show_obstacle_selection())
 
     def refresh_toolbox(self, scenario: Scenario):
         self.current_scenario = scenario
@@ -92,9 +90,9 @@ class ObstacleProfileToolbox(QDockWidget):
         """
         Initializes GUI elements with intersection information.
         """
-        self.obstacle_selection_ui.selected_obstacles.clear()
+        self.obstacle_selection_ui.scenario_obstacles.clear()
         for obstacle in self.collect_obstacle_ids():
-            self.obstacle_selection_ui.selected_obstacles.append(str(obstacle))
+            self.obstacle_selection_ui.scenario_obstacles.append(str(obstacle))
 
         self.obstacle_selection_ui.setupUI()
 
@@ -108,25 +106,128 @@ class ObstacleProfileToolbox(QDockWidget):
         else:
             return []
 
-    def get_current_obstacle(self) -> Union[Obstacle, None]:
+    def get_current_obstacles(self) -> Union[List[Obstacle], None]:
         """
-        :return: current selected obstacle
+        :return: list of currently selected obstacles
         """
-        obstacle_id = self.get_current_obstacle_id()
-        if obstacle_id is not None:
-            selected_obstacle = self.current_scenario.obstacle_by_id(obstacle_id)
-            return selected_obstacle
+        checked_list = self.get_current_obstacles_ids()
+        if checked_list is not None:
+            return [self.current_scenario.obstacle_by_id(obs) for obs in checked_list]
         else:
             return None
 
-    def get_current_obstacle_id(self) -> Union[int, None]:
+    def get_current_obstacles_ids(self) -> Union[List[int], None]:
         """
-        :return: obstacle_id of current selected obstacle
+        get alle checked CheckBoxes of the obstacle_selection and return them as list
         """
-        if self.obstacle_profile_toolbox_ui.selected_obstacle.currentText() != "None":
-            return int(self.obstacle_profile_toolbox_ui.selected_obstacle.currentText())
+        checked_list = []
+        for i in range(self.obstacle_selection_ui.formLayout.count()):
+            if self.obstacle_selection_ui.formLayout.itemAt(i).widget().isChecked():
+                checked_list.append(int(self.obstacle_selection_ui.formLayout.itemAt(i).widget().text()))
+        if self.obstacle_selection_ui.formLayout.count() > 0:
+            return checked_list
         else:
             return None
+
+    def plot_obstacles_state_profile(self):
+        """
+        Gets the values based on which profiles are selected.
+        If non updated changes, these values come from the xyova array,
+        otherwise directly from the obstacke_state_list
+        """
+
+        time = [0]
+        obstacle_profiles = []
+        state_variable_name = self.obstacle_profile_toolbox_ui.obstacle_state_variable.currentText()
+
+        if len(self.obstacle_selection_ui.formLayout.count()) > 0:
+            for obstacle in self.get_current_obstacles():
+                profile = None  # some simulations do not have their obstacle_states initialized like others and if
+                # trying to access them  # CR will crash
+                try:
+                    if obstacle.initial_state.__getattribute__(state_variable_name):
+                        if isinstance(obstacle, DynamicObstacle):
+                            if state_variable_name == "velocity":
+                                if self.xyova:
+                                    obstacle_profiles.append([j[3] for j in self.xyova])
+                                else:
+                                    profile = [obstacle.initial_state.__getattribute__("velocity")]
+                                    profile += [state.__getattribute__("velocity") for state in
+                                                obstacle.prediction.trajectory.state_list]
+                                    obstacle_profiles.append(profile)
+                            elif state_variable_name == "acceleration":
+                                if self.xyova:
+                                    obstacle_profiles.append([j[4] for j in self.xyova])
+                                else:
+                                    profile = [obstacle.initial_state.__getattribute__("acceleration")]
+                                    profile += [state.__getattribute__("acceleration") for state in
+                                                obstacle.prediction.trajectory.state_list]
+                                    obstacle_profiles.append(profile)
+                            elif state_variable_name == "yaw_rate":
+                                if self.xyova:
+                                    obstacle_profiles.append([j[5] for j in self.xyova])
+                                else:
+                                    profile = [obstacle.initial_state.__getattribute__("yaw_rate")]
+                                    profile += [state.__getattribute__("yaw_rate") for state in
+                                                obstacle.prediction.trajectory.state_list]
+                                    obstacle_profiles.append(profile)
+                            elif state_variable_name == "slip_angle":
+                                if self.xyova:
+                                    obstacle_profiles.append([j[6] for j in self.xyova])
+                                else:
+                                    profile = [obstacle.initial_state.__getattribute__("slip_angle")]
+                                    profile += [state.__getattribute__("slip_angle") for state in
+                                                obstacle.prediction.trajectory.state_list]
+                                    obstacle_profiles.append(profile)
+                    # states which Static and DynamicObstacles share
+                    if state_variable_name == "x-position":
+                        if isinstance(obstacle, StaticObstacle):
+                            obstacle_profiles.append([obstacle.initial_state.__getattribute__("position")[0]])
+                        elif isinstance(obstacle, DynamicObstacle):
+                            if self.xyova:
+                                obstacle_profiles.append([j[0] for j in self.xyova])
+                            else:
+                                profile = [obstacle.initial_state.__getattribute__("position")[0]]
+                                profile += [state.__getattribute__("position")[0] for state in
+                                            obstacle.prediction.trajectory.state_list]
+                                obstacle_profiles.append(profile)
+                    elif state_variable_name == "y-position":
+                        if isinstance(obstacle, StaticObstacle):
+                            obstacle_profiles.append([obstacle.initial_state.__getattribute__("position")[1]])
+                        elif isinstance(obstacle, DynamicObstacle):
+                            if self.xyova:
+                                obstacle_profiles.append([j[1] for j in self.xyova])
+                            else:
+                                profile = [obstacle.initial_state.__getattribute__("position")[1]]
+                                profile += [state.__getattribute__("position")[1] for state in
+                                            obstacle.prediction.trajectory.state_list]
+                                obstacle_profiles.append(profile)
+                    elif state_variable_name == "orientation":
+                        if isinstance(obstacle, StaticObstacle):
+                            obstacle_profiles.append([obstacle.initial_state.__getattribute__("orientation")])
+                        elif isinstance(obstacle, DynamicObstacle):
+                            if self.xyova:
+                                obstacle_profiles.append([j[2] for j in self.xyova])
+                            else:
+                                profile = [obstacle.initial_state.__getattribute__("orientation")]
+                                profile += [state.__getattribute__("orientation") for state in
+                                            obstacle.prediction.trajectory.state_list]
+                                obstacle_profiles.append(profile)
+
+                except:
+                    print(state_variable_name + " not initialized")
+
+                if isinstance(obstacle, DynamicObstacle) and not self.obstacle_profile_toolbox_ui.animation.isChecked():
+                    if self.xyova:
+                        time = [i for i in range(0, len(self.xyova))]
+                    else:
+                        time = [obstacle.initial_state.time_step]
+                        time += [state.time_step for state in obstacle.prediction.trajectory.state_list]
+
+            self.xmin = None
+            self.xmax = None
+            self.ymin = None
+            self.ymax = None
 
     def plot_obstacle_state_profile(self):
         """
@@ -134,9 +235,7 @@ class ObstacleProfileToolbox(QDockWidget):
         If non updated changes, these values come from the xyova array,
         otherwise directly from the obstacle state_list
         """
-        for i in range(self.obstacle_selection_ui.formLayout.count()):
-            if self.obstacle_selection_ui.formLayout.itemAt(i).widget().isChecked():
-                print(self.obstacle_selection_ui.formLayout.itemAt(i).widget().objectName())
+        print(self.get_current_obstacles())
 
         if self.obstacle_profile_toolbox_ui.selected_obstacle.currentText() not in ["",
                                                                                     "None"] and not self.update_ongoing:
