@@ -273,8 +273,6 @@ class ObstacleProfileToolbox(QDockWidget):
         obstacle = self.get_current_obstacles()
 
         if obstacle:
-            print(obstacle)
-            print(obstacle[0])
             self.obstacle_profile_toolbox_ui.obstacle_state_variable.clear()
             state_variables = [var for var in obstacle[0].initial_state.attributes if var not in ["position", "time_step"]]
 
@@ -293,7 +291,6 @@ class ObstacleProfileToolbox(QDockWidget):
             self.obstacle_profile_toolbox_ui.canvas.draw()
 
     def get_max_min(self, profiles):
-        print("TODO")
         for p in profiles:
             if min(p) < self.ymin:
                 self.ymin = min(p)
