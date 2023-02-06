@@ -93,7 +93,7 @@ class Obstacle_Selection_Ui(object):
 
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
-        MainWindow.setWindowTitle(_translate("MainWindow", "Obstacle self.Selection"))
+        MainWindow.setWindowTitle(_translate("MainWindow", "Obstacle Selection"))
         self.button_ok.setText(_translate("MainWindow", "Ok"))
 
     def update_window(self):
