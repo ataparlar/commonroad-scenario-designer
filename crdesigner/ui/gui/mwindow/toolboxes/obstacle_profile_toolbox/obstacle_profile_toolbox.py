@@ -36,13 +36,14 @@ class ObstacleProfileToolbox(QDockWidget):
         self.obstacle_selection_ui = Obstacle_Selection_Ui(self.mwindow)
         self.adjust_ui()
         self.connect_gui_elements()
+        self.initialize_state_variables()
         self.tmp_folder = tmp_folder
         self.text_browser = text_browser
-        self.update_ongoing = False
         self.amount_obstacles = 0
         self.canvas = DynamicCanvas()
         self.obstacle_color = None
         self.obstacle_selection = None
+
 
         # for profile visualisation
         self.sel_point = None
@@ -80,14 +81,14 @@ class ObstacleProfileToolbox(QDockWidget):
         self.current_time.valueChanged.connect(
                 lambda: self.update_animation())
 
-        self.obstacle_profile_toolbox_ui.obstacle_button.clicked.connect(
-                lambda: self.update_obstacle_information())
-
-        self.obstacle_selection_ui.button_ok.clicked.connect(
-                lambda: self.update_obstacle_information())
+        self.obstacle_profile_toolbox_ui.animation.clicked.connect(
+                lambda: self.plot_obstacles_state_profile())
 
         self.obstacle_profile_toolbox_ui.obstacle_button.clicked.connect(
                 lambda: self.show_obstacle_selection())
+
+        self.obstacle_profile_toolbox_ui.obstacle_button.clicked.connect(
+                lambda: self.plot_obstacles_state_profile())
 
     def refresh_toolbox(self, scenario: Scenario):
         self.current_scenario = scenario
@@ -143,7 +144,7 @@ class ObstacleProfileToolbox(QDockWidget):
         """
         Gets the values based on which profiles are selected.
         If non updated changes, these values come from the xyova array,
-        otherwise directly from the obstacke_state_list
+        otherwise directly from the obstacle_state_list
         """
 
         time = [0]
@@ -222,9 +223,8 @@ class ObstacleProfileToolbox(QDockWidget):
                                 profile += [state.__getattribute__("orientation") for state in
                                             obstacle.prediction.trajectory.state_list]
                                 obstacle_profiles.append(profile)
-
                 except:
-                    print(state_variable_name + " not initialized")
+                    print("Obstacle state not initialized")
 
                 if isinstance(obstacle, DynamicObstacle) and not self.obstacle_profile_toolbox_ui.animation.isChecked():
                     if self.xyova:
@@ -264,33 +264,16 @@ class ObstacleProfileToolbox(QDockWidget):
     def on_ylim_change(self, event):
         self.ymin, self.ymax = event.get_ylim()
 
+    def initialize_state_variables(self):
+        state_variables = ["orientation", "velocity", "acceleration", "yaw_rate", "slip_angle", "x-position", "y-position"]
+        self.obstacle_profile_toolbox_ui.obstacle_state_variable.addItems(state_variables)
+
     def update_obstacle_information(self):
-        """
-        retrieves obstacle details to the gui when an obstacle is pressed or the id
-        is selected in the obstacle toolbox
-        """
-        self.update_ongoing = True
-        obstacle = self.get_current_obstacles()
-
-        if obstacle:
-            self.obstacle_profile_toolbox_ui.obstacle_state_variable.clear()
-            state_variables = [var for var in obstacle[0].initial_state.attributes if var not in ["position", "time_step"]]
-
-            if "position" in obstacle[0].initial_state.attributes:
-                state_variables += ["x-position", "y-position"]
-
-            self.obstacle_profile_toolbox_ui.obstacle_state_variable.addItems(state_variables)
-            self.update_ongoing = False
-            # clear xyo if switch to another obstacle
-            self.xyova.clear()
-            self.plot_obstacles_state_profile()
-        # if set to "None": clear QLineEdits
-        else:
-            self.obstacle_profile_toolbox_ui.obstacle_state_variable.clear()
-            self.obstacle_profile_toolbox_ui.figure.clear()
-            self.obstacle_profile_toolbox_ui.canvas.draw()
+        self.obstacle_profile_toolbox_ui.figure.clear()
+        self.obstacle_profile_toolbox_ui.canvas.draw()
 
     def get_max_min(self, profiles):
+        # get the ymax and ymin from all selected obstacles
         for p in profiles:
             if min(p) < self.ymin:
                 self.ymin = min(p)
@@ -354,7 +337,7 @@ class ObstacleProfileToolbox(QDockWidget):
         for p in profiles:
             current_time_profiles.append(p[0:self.current_time.value() + 1])
             # there are some scenarios where more time_steps exist than profile values
-            # this if case prevents a crash
+            # this if case prevents a crash for this case
             if len(time) != len(p[0:self.current_time.value() + 1]):
                 return
 
@@ -369,4 +352,5 @@ class ObstacleProfileToolbox(QDockWidget):
         self.obstacle_selection_ui.button_ok.clicked.connect(self.close)
 
     def close(self):
+        self.plot_obstacles_state_profile()
         self.obstacle_selection_ui.closeSelection()

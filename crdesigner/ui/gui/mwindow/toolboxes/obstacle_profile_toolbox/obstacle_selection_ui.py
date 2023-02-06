@@ -16,7 +16,6 @@ class Obstacle_Selection_Ui(object):
         self.setupUI()
 
     def setupUI(self):
-        self.mwindow
         self.selection.setObjectName("Obstacle Selection")
         self.selection.resize(1000 * FACTOR, 1000 * FACTOR)
         self.centralwidget = QtWidgets.QWidget(self.selection)
