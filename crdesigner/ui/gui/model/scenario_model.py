@@ -386,7 +386,8 @@ class ScenarioModel(QObject):
         self.notify_all()
 
     def create_three_way_intersection(self, width: float, diameter: int, incoming_length: int,
-                                      add_traffic_signs: bool, add_traffic_lights: bool):
+                                      add_traffic_signs: bool, add_traffic_lights: bool, x_pos: float = 0,
+                                      y_pos: float = 0) -> Intersection:
         """
         Creates a three-way intersection ond adds it to the scenario.
 
@@ -395,21 +396,27 @@ class ScenarioModel(QObject):
         @param incoming_length: length of the incoiming lanelets
         @param add_traffic_signs: boolean if traffic signs should be added
         @param add_traffic_lights: boolean if traffic lights should be added
+        @param x_pos: Initial x-coordinate of intersection
+        @param y_pos: Initial y-coordinate of intersection
+        @return: returns the new created intersection
         """
         self._update_scenario()
         country_signs = globals()[
             "TrafficSignID" + SupportedTrafficSignCountry(self.get_country_id()).name.capitalize()]
         intersection, new_traffic_signs, new_traffic_lights, new_lanelets = MapCreator.create_three_way_intersection(
                 width, diameter, incoming_length, self._current_scenario(), add_traffic_signs, add_traffic_lights,
-                country_signs)
+                country_signs, x_pos, y_pos)
         self._current_scenario().add_objects(intersection)
         self._current_scenario().add_objects(new_lanelets)
         self._current_scenario().add_objects(new_traffic_signs)
         self._current_scenario().add_objects(new_traffic_lights)
         self.notify_all()
 
+        return intersection
+
     def create_four_way_intersection(self, width: float, diameter: int, incoming_length: int,
-                                     add_traffic_signs: bool, add_traffic_lights: bool):
+                                     add_traffic_signs: bool, add_traffic_lights: bool, x_pos: float = 0,
+                                     y_pos: float = 0) -> Intersection:
         """
         Creates a four-way intersection ond adds it to the scenario.
 
@@ -418,18 +425,23 @@ class ScenarioModel(QObject):
         @param incoming_length: length of the incoiming lanelets
         @param add_traffic_signs: boolean if traffic signs should be added
         @param add_traffic_lights: boolean if traffic lights should be added
+        @param x_pos: Initial x-coordinate of intersection
+        @param y_pos: Initial y-coordinate of intersection
+        @return: returns the new created intersection
         """
         self._update_scenario()
         country_signs = globals()[
             "TrafficSignID" + SupportedTrafficSignCountry(self.get_country_id()).name.capitalize()]
         intersection, new_traffic_signs, new_traffic_lights, new_lanelets = MapCreator.create_four_way_intersection(
                 width, diameter, incoming_length, self._current_scenario(), add_traffic_signs, add_traffic_lights,
-                country_signs)
+                country_signs, x_pos, y_pos)
         self._current_scenario().add_objects(intersection)
         self._current_scenario().add_objects(new_lanelets)
         self._current_scenario().add_objects(new_traffic_signs)
         self._current_scenario().add_objects(new_traffic_lights)
         self.notify_all()
+
+        return intersection
 
     def add_intersection(self, intersection: Intersection):
         """

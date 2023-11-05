@@ -2,7 +2,7 @@ from scipy.interpolate import interp1d
 from typing import Tuple, Union, Set, List
 import numpy as np
 
-from commonroad.scenario.intersection import Intersection
+from commonroad.scenario.intersection import Intersection, OutgoingGroup
 from commonroad.scenario.intersection import IncomingGroup
 from commonroad.scenario.lanelet import RoadUser, LaneletNetwork, Lanelet, LineMarking, LaneletType, StopLine
 from commonroad.scenario.scenario import Scenario
@@ -30,7 +30,8 @@ class MapCreator:
                         line_marking_left: LineMarking = LineMarking.UNKNOWN,
                         line_marking_right: LineMarking = LineMarking.UNKNOWN, stop_line: StopLine = None,
                         traffic_signs: Set[int] = None, traffic_lights: Set[int] = None, stop_line_at_end: bool = False,
-                        stop_line_at_beginning: bool = False, backwards: bool = False) -> Lanelet:
+                        stop_line_at_beginning: bool = False, backwards: bool = False,
+                        x_pos: float = 0, y_pos: float = 0) -> Lanelet:
         """
         Function for creating a straight lanelet given a length, width, and number of vertices.
 
@@ -64,9 +65,9 @@ class MapCreator:
         center_vertices = []
         right_vertices = []
         for i in range(num_vertices):
-            left_vertices.append([length_div * i + eps, width / 2 + eps])
-            center_vertices.append([length_div * i + eps, eps])
-            right_vertices.append([length_div * i + eps, -(width / 2) + eps])
+            left_vertices.append([x_pos + length_div * i + eps, y_pos + width / 2 + eps])
+            center_vertices.append([x_pos + length_div * i + eps, y_pos + eps])
+            right_vertices.append([x_pos + length_div * i + eps, y_pos -(width / 2) + eps])
 
         left_vertices = np.array(left_vertices)
         center_vertices = np.array(center_vertices)
@@ -454,7 +455,8 @@ class MapCreator:
                                                           TrafficSignIDFrance, TrafficSignIDGermany,
                                                           TrafficSignIDGreece, TrafficSignIDItaly,
                                                           TrafficSignIDPuertoRico, TrafficSignIDRussia,
-                                                          TrafficSignIDSpain, TrafficSignIDUsa,  TrafficSignIDZamunda])\
+                                                          TrafficSignIDSpain, TrafficSignIDUsa,  TrafficSignIDZamunda],
+                                     x_pos: float = 0, y_pos: float = 0)\
             -> Tuple[Intersection, List[TrafficSign], List[TrafficLight], List[Lanelet]]:
         """
         Creates a four way intersection with predefined line markings at the origin.
@@ -474,7 +476,8 @@ class MapCreator:
         new_lanelets.append(MapCreator.create_straight(width, incoming_length, 10, lanelet_ids[0],
                                                        {LaneletType.UNKNOWN}, road_user_one_way={RoadUser.VEHICLE},
                                                        line_marking_left=LineMarking.DASHED,
-                                                       line_marking_right=LineMarking.SOLID))
+                                                       line_marking_right=LineMarking.SOLID,
+                                                       x_pos=x_pos, y_pos=y_pos))
         new_lanelets.append(MapCreator.create_adjacent_lanelet(True, new_lanelets[0], lanelet_ids[1], False, width,
                                                                {LaneletType.UNKNOWN},
                                                                road_user_one_way={RoadUser.VEHICLE},
@@ -603,8 +606,10 @@ class MapCreator:
         outgoing_straight = [lanelet_ids[2], lanelet_ids[12], lanelet_ids[3], lanelet_ids[13]]
         outgoing_left = [lanelet_ids[4], lanelet_ids[10], lanelet_ids[16], lanelet_ids[18]]
         incoming_ids = [scenario.generate_object_id() for i in range(len(incomings))]
+        outgoing_ids = [scenario.generate_object_id() for i in range(len(incomings))]
         left_of = [incoming_ids[-1], incoming_ids[0], incoming_ids[1], incoming_ids[2]]
         map_incoming = []
+        map_outgoing = []
 
         for n in range(len(incomings)):
             inc = {incomings[n]}
@@ -612,11 +617,14 @@ class MapCreator:
             left = {outgoing_left[n]}
             straight = {outgoing_straight[n]}
             incoming_id = incoming_ids[n]
+            outgoing_id = outgoing_ids[n]
+            out = {new_lanelets[outgoing_straight[n] - 1].successor[0]}
             map_incoming.append(IncomingGroup(incoming_id, incoming_lanelets=inc,
                                 outgoing_right=right, outgoing_straight=straight,
                                 outgoing_left=left))
+            map_outgoing.append(OutgoingGroup(outgoing_id, None, incoming_id))
         intersection_id = scenario.generate_object_id()
-        intersection = Intersection(intersection_id=intersection_id, incomings=map_incoming)
+        intersection = Intersection(intersection_id=intersection_id, incomings=map_incoming, outgoings=map_outgoing)
 
         new_traffic_signs = []
         sign_ids = [set()] * 4
@@ -704,7 +712,8 @@ class MapCreator:
                                                            TrafficSignIDGreece, TrafficSignIDItaly,
                                                            TrafficSignIDPuertoRico, TrafficSignIDRussia,
                                                            TrafficSignIDSpain, TrafficSignIDUsa,
-                                                           TrafficSignIDZamunda]) \
+                                                           TrafficSignIDZamunda],
+                                      x_pos: float = 0, y_pos: float = 0) \
             -> Tuple[Intersection, List[TrafficSign], List[TrafficLight], List[Lanelet]]:
         """
         Creates a four way intersection with predefined line markings at the origin.
@@ -724,7 +733,8 @@ class MapCreator:
         new_lanelets.append(MapCreator.create_straight(width, incoming_length, 10, lanelet_ids[0],
                                                        {LaneletType.UNKNOWN}, road_user_one_way={RoadUser.VEHICLE},
                                                        line_marking_left=LineMarking.DASHED,
-                                                       line_marking_right=LineMarking.SOLID))
+                                                       line_marking_right=LineMarking.SOLID,
+                                                       x_pos=x_pos, y_pos=y_pos))
         new_lanelets.append(MapCreator.create_adjacent_lanelet(True, new_lanelets[0], lanelet_ids[1],
                                                                False, width,
                                                                {LaneletType.UNKNOWN},

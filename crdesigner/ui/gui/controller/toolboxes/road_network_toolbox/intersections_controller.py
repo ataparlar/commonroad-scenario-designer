@@ -26,13 +26,17 @@ class AddIntersectionController:
                 lambda: self.add_three_way_intersection())
         self.road_network_toolbox_ui.selected_intersection.currentTextChanged.connect(
                 lambda: self.intersection_ui.update_intersection_information())
-        self.road_network_toolbox_ui.button_add_incoming.clicked.connect(lambda: self.intersection_ui.add_incoming_to_table())
+        self.road_network_toolbox_ui.button_add_incoming.clicked.connect(
+            lambda: self.intersection_ui.add_incoming_to_table())
         self.road_network_toolbox_ui.button_remove_incoming.clicked.connect(
-            lambda: self.intersection_ui.remove_incoming())
+                lambda: self.intersection_ui.remove_incoming())
         self.road_network_toolbox_ui.button_fit_intersection.clicked.connect(lambda: self.fit_intersection())
         self.road_network_toolbox_ui.button_add_intersection.clicked.connect(lambda: self.add_intersection())
         self.road_network_toolbox_ui.button_remove_intersection.clicked.connect(lambda: self.remove_intersection())
         self.road_network_toolbox_ui.button_update_intersection.clicked.connect(lambda: self.update_intersection())
+        self.road_network_toolbox_ui.button_rotate_intersection.clicked.connect(lambda: self.rotate_intersection())
+        self.road_network_toolbox_ui.button_translate_intersection.clicked.connect(
+            lambda: self.translate_intersection())
 
     def add_four_way_intersection(self):
         """
@@ -51,8 +55,14 @@ class AddIntersectionController:
         add_traffic_signs = self.road_network_toolbox_ui.intersection_with_traffic_signs.isChecked()
         add_traffic_lights = self.road_network_toolbox_ui.intersection_with_traffic_lights.isChecked()
 
+        x_pos_content = self.road_network_toolbox_ui.intersection_start_position_x.text()
+        y_pos_content = self.road_network_toolbox_ui.intersection_start_position_y.text()
+        x_pos = float(x_pos_content) if x_pos_content is not None and x_pos_content != '' else 0
+        y_pos = float(y_pos_content) if y_pos_content is not None and y_pos_content != '' else 0
+
         self.scenario_model.create_four_way_intersection(width, diameter, incoming_length, add_traffic_signs,
-                                                          add_traffic_lights)
+                                                         add_traffic_lights, x_pos, y_pos)
+
         self.road_network_controller.set_default_road_network_list_information()
 
     def add_three_way_intersection(self):
@@ -72,8 +82,13 @@ class AddIntersectionController:
         add_traffic_signs = self.road_network_toolbox_ui.intersection_with_traffic_signs.isChecked()
         add_traffic_lights = self.road_network_toolbox_ui.intersection_with_traffic_lights.isChecked()
 
+        x_pos_content = self.road_network_toolbox_ui.intersection_start_position_x.text()
+        y_pos_content = self.road_network_toolbox_ui.intersection_start_position_y.text()
+        x_pos = float(x_pos_content) if x_pos_content is not None and x_pos_content != '' else 0
+        y_pos = float(y_pos_content) if y_pos_content is not None and y_pos_content != '' else 0
+
         self.scenario_model.create_three_way_intersection(width, diameter, incoming_length, add_traffic_signs,
-                                                          add_traffic_lights)
+                                                          add_traffic_lights, x_pos, y_pos)
         self.road_network_controller.set_default_road_network_list_information()
 
     def fit_intersection(self):
@@ -84,9 +99,10 @@ class AddIntersectionController:
             self.road_network_controller.text_browser.append("Please stop the animation first.")
             return
 
-        if self.road_network_toolbox_ui.selected_intersection.currentText() not in ["","None"] \
-                and self.road_network_toolbox_ui.other_lanelet_to_fit.currentText() not in ["", "None"] \
-                and self.road_network_toolbox_ui.intersection_lanelet_to_fit.currentText() not in ["", "None"]:
+        if (self.road_network_toolbox_ui.selected_intersection.currentText() not in ["",
+                                                                                    "None"] and
+                self.road_network_toolbox_ui.other_lanelet_to_fit.currentText() not in [
+            "", "None"] and self.road_network_toolbox_ui.intersection_lanelet_to_fit.currentText() not in ["", "None"]):
             selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
             predecessor_id = int(self.road_network_toolbox_ui.other_lanelet_to_fit.currentText())
             successor_id = int(self.road_network_toolbox_ui.intersection_lanelet_to_fit.currentText())
@@ -111,11 +127,10 @@ class AddIntersectionController:
         for row in range(self.road_network_toolbox_ui.intersection_incomings_table.rowCount()):
             incoming_id = int(self.road_network_toolbox_ui.intersection_incomings_table.item(row, 0).text())
             incoming_lanelets = {int(item) for item in
-                                 self.road_network_toolbox_ui.intersection_incomings_table .cellWidget(row,1)
-                                 .get_checked_items()}
+                                 self.road_network_toolbox_ui.intersection_incomings_table.cellWidget(row,
+                                                                                                      1).get_checked_items()}
             if len(incoming_lanelets) < 1:
-                self.road_network_controller.text_browser\
-                    .append("_Warning:_ An incoming must consist at least of one lanelet.")
+                self.road_network_controller.text_browser.append("_Warning:_ An incoming must consist at least of one lanelet.")
                 print("intersections_controller.py/add_intersection: An incoming must consist at least of one lanelet.")
                 return
             successor_left = {int(item) for item in
@@ -130,9 +145,11 @@ class AddIntersectionController:
             if len(successor_left) + len(successor_right) + len(successor_straight) < 1:
                 print("An incoming must consist at least of one successor")
                 return
-            left_of = int(self.road_network_toolbox_ui.intersection_incomings_table.cellWidget(row,5)
+            left_of = int(self.road_network_toolbox_ui.intersection_incomings_table.cellWidget(row
+                                                                                               ,5)
                           .currentText()) if self.road_network_toolbox_ui.intersection_incomings_table\
-                                                                       .cellWidget(row, 5).currentText() != "" else None
+                                                                       .cellWidget \
+                (row, 5).currentText() != "" else None
             incoming = IncomingGroup(incoming_id=incoming_id,
                                      incoming_lanelets=incoming_lanelets,
                                      outgoing_right=successor_right,
@@ -147,7 +164,8 @@ class AddIntersectionController:
             self.road_network_controller.set_default_road_network_list_information()
         else:
             self.road_network_controller.text_browser \
-                .append("_Warning:_ An intersection must consist at least of two incomings.")
+                .append \
+                ("_Warning:_ An intersection must consist at least of two incomings.")
             print("intersections_controller.py/add_intersection: An intersection must consist at least of two "
                   "incomings.")
 
@@ -184,3 +202,81 @@ class AddIntersectionController:
             selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
             self.scenario_model.update_intersection(selected_intersection_id)
             self.add_intersection(selected_intersection_id)
+
+    def rotate_intersection(self):
+        """
+        _summary_: translate intersections by user-defined x- and y-values.
+        """
+
+        # Getting rotation details.
+
+        if self.road_network_toolbox_ui.selected_intersection.currentText() in ["", "None"]:
+            self.road_network_controller.text_browser.append("Please select an intersection first.")
+            return
+
+        try:
+            angle = float(self.road_network_toolbox_ui.intersection_rotation_angle.text())
+        except ValueError:
+            return
+
+        # Finding intersection.
+        selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
+        intersection = self.scenario_model.find_intersection_by_id(selected_intersection_id)
+
+        lanelets = self.collect_lanelets(intersection)
+
+        for lanelet_id in lanelets:
+            lanelet = self.scenario_model.find_lanelet_by_id(lanelet_id)
+            lanelet.translate_rotate(np.array([0, 0]), np.deg2rad(angle))
+
+        self.update_intersection()
+        self.road_network_controller.set_default_road_network_list_information()
+
+    def translate_intersection(self):
+        """
+        _summary_: translate intersections by user-defined x- and y-values.
+        """
+
+        # Getting rotation details.
+
+        if self.road_network_toolbox_ui.selected_intersection.currentText() in ["", "None"]:
+            self.road_network_controller.text_browser.append("Please select an intersection first.")
+            return
+
+        try:
+            x = float(self.road_network_toolbox_ui.intersection_x_translation.text())
+        except ValueError:
+            x = 0
+
+        try:
+            y = float(self.road_network_toolbox_ui.intersection_y_translation.text())
+        except ValueError:
+            y = 0
+
+        # Finding intersection.
+        selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
+        intersection = self.scenario_model.find_intersection_by_id(selected_intersection_id)
+
+        lanelets = self.collect_lanelets(intersection)
+
+        for lanelet_id in lanelets:
+            lanelet = self.scenario_model.find_lanelet_by_id(lanelet_id)
+            lanelet.translate_rotate(np.array([x, y]), np.deg2rad(0))
+
+        self.update_intersection()
+        self.road_network_controller.set_default_road_network_list_information()
+
+    def collect_lanelets(self, intersection: Intersection) -> Set[int]:
+        lanelets = []
+        for incoming_group in intersection.incomings:
+            lanelets += list(incoming_group.incoming_lanelets)
+            lanelets += list(incoming_group.outgoing_left)
+            lanelets += list(incoming_group.outgoing_right)
+            lanelets += list(incoming_group.outgoing_straight)
+
+        if intersection.outgoings is not None:
+            for outgoing_group in intersection.outgoings:
+                if outgoing_group.outgoing_lanelets is not None:
+                    lanelets += list(outgoing_group.outgoing_lanelets)
+
+        return set(lanelets)
