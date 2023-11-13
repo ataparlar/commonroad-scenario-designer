@@ -270,9 +270,18 @@ class AddIntersectionController:
         lanelets = []
         for incoming_group in intersection.incomings:
             lanelets += list(incoming_group.incoming_lanelets)
+
             lanelets += list(incoming_group.outgoing_left)
+            for lanelet_id in incoming_group.outgoing_left:
+                lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
+
             lanelets += list(incoming_group.outgoing_right)
+            for lanelet_id in incoming_group.outgoing_right:
+                lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
+
             lanelets += list(incoming_group.outgoing_straight)
+            for lanelet_id in incoming_group.outgoing_straight:
+                lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
 
         if intersection.outgoings is not None:
             for outgoing_group in intersection.outgoings:
