@@ -685,3 +685,11 @@ class ScenarioModel(QObject):
         @returns: Returns a copy of the scenario
         """
         return copy.deepcopy(self._current_scenario())
+
+    def compute_member_lanelets(self, intersection_id: int) -> set:
+        """
+        @param: intersection_id: id of intersection which lanelets should be returned
+        @returns: set of all member lanelets
+        """
+        intersection = self.find_intersection_by_id(intersection_id=intersection_id)
+        return self._current_scenario().compute_member_lanelets(intersection)
