@@ -606,10 +606,8 @@ class MapCreator:
         outgoing_straight = [lanelet_ids[2], lanelet_ids[12], lanelet_ids[3], lanelet_ids[13]]
         outgoing_left = [lanelet_ids[4], lanelet_ids[10], lanelet_ids[16], lanelet_ids[18]]
         incoming_ids = [scenario.generate_object_id() for i in range(len(incomings))]
-        outgoing_ids = [scenario.generate_object_id() for i in range(len(incomings))]
         left_of = [incoming_ids[-1], incoming_ids[0], incoming_ids[1], incoming_ids[2]]
         map_incoming = []
-        map_outgoing = []
 
         for n in range(len(incomings)):
             inc = {incomings[n]}
@@ -617,14 +615,11 @@ class MapCreator:
             left = {outgoing_left[n]}
             straight = {outgoing_straight[n]}
             incoming_id = incoming_ids[n]
-            outgoing_id = outgoing_ids[n]
-            out = {new_lanelets[outgoing_straight[n] - 1].successor[0]}
             map_incoming.append(IncomingGroup(incoming_id, incoming_lanelets=inc,
                                 outgoing_right=right, outgoing_straight=straight,
                                 outgoing_left=left))
-            map_outgoing.append(OutgoingGroup(outgoing_id, None, incoming_id))
         intersection_id = scenario.generate_object_id()
-        intersection = Intersection(intersection_id=intersection_id, incomings=map_incoming, outgoings=map_outgoing)
+        intersection = Intersection(intersection_id=intersection_id, incomings=map_incoming)
 
         new_traffic_signs = []
         sign_ids = [set()] * 4

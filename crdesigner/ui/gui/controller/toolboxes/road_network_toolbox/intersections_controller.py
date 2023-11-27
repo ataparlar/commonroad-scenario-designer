@@ -223,7 +223,8 @@ class AddIntersectionController:
         selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
         intersection = self.scenario_model.find_intersection_by_id(selected_intersection_id)
 
-        lanelets = self.scenario_model.compute_member_lanelets(intersection_id=selected_intersection_id)
+        # lanelets = self.scenario_model.compute_member_lanelets(intersection_id=selected_intersection_id)
+        lanelets = self.compute_member_lanelets(intersection=intersection)
 
         for lanelet_id in lanelets:
             lanelet = self.scenario_model.find_lanelet_by_id(lanelet_id)
@@ -257,7 +258,8 @@ class AddIntersectionController:
         selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
         intersection = self.scenario_model.find_intersection_by_id(selected_intersection_id)
 
-        lanelets = self.scenario_model.compute_member_lanelets(intersection_id=selected_intersection_id)
+        # lanelets = self.scenario_model.compute_member_lanelets(intersection_id=selected_intersection_id)
+        lanelets = self.compute_member_lanelets(intersection=intersection)
 
         for lanelet_id in lanelets:
             lanelet = self.scenario_model.find_lanelet_by_id(lanelet_id)
@@ -266,26 +268,43 @@ class AddIntersectionController:
         self.update_intersection()
         self.road_network_controller.set_default_road_network_list_information()
 
-    def collect_lanelets(self, intersection: Intersection) -> Set[int]:
-        lanelets = []
+    def compute_member_lanelets(self, intersection: Intersection):
+        outgoing_lanelets = []
+        incoming_lanelets = []
+        intermediate_lanelets = []
+
         for incoming_group in intersection.incomings:
-            lanelets += list(incoming_group.incoming_lanelets)
+            incoming_lanelets += list(incoming_group.incoming_lanelets)
 
-            lanelets += list(incoming_group.outgoing_left)
+            outgoing_lanelets += list(incoming_group.outgoing_left)
             for lanelet_id in incoming_group.outgoing_left:
-                lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
+                outgoing_lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
 
-            lanelets += list(incoming_group.outgoing_right)
+            outgoing_lanelets += list(incoming_group.outgoing_right)
             for lanelet_id in incoming_group.outgoing_right:
-                lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
+                outgoing_lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
 
-            lanelets += list(incoming_group.outgoing_straight)
+            outgoing_lanelets += list(incoming_group.outgoing_straight)
             for lanelet_id in incoming_group.outgoing_straight:
-                lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
+                outgoing_lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
 
         if intersection.outgoings is not None:
             for outgoing_group in intersection.outgoings:
                 if outgoing_group.outgoing_lanelets is not None:
-                    lanelets += list(outgoing_group.outgoing_lanelets)
+                    outgoing_lanelets += list(outgoing_group.outgoing_lanelets)
+        # find all intermediate lanelets in the intersection
+        for inc_lanelet in incoming_lanelets:
 
-        return set(lanelets)
+            tmp_lanelets = set()
+            tmp_lanelets.add(inc_lanelet)
+            while len(tmp_lanelets) > 0:
+                tmp_lanelet = tmp_lanelets.pop()
+                if tmp_lanelet not in outgoing_lanelets:
+                    intermediate_lanelets.append(tmp_lanelet)
+                    tmp_succesor_lanelets = self.scenario_model.find_lanelet_by_id(tmp_lanelet).successor
+                    if tmp_succesor_lanelets is not None:
+                        for tmp_suc_lanelet in tmp_succesor_lanelets:
+                            if tmp_suc_lanelet not in outgoing_lanelets:
+                                intermediate_lanelets.append(tmp_suc_lanelet)
+
+        return set(incoming_lanelets + intermediate_lanelets + outgoing_lanelets)
