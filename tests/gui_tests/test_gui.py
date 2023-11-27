@@ -30,7 +30,7 @@ def test_pyqt_framework(qtbot):
     if os.path.exists(path_autosave):
         os.remove(path_autosave)
 
-    window = MWindowController()
+    window = MWindowController(test=True)
     qtbot.addWidget(window.mwindow_ui)
 
     # ----- PERFORM TESTS ------ #
