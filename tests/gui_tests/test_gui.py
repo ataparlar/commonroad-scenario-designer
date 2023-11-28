@@ -153,6 +153,7 @@ def execute_toolbar_test(window):
     assert undo_action_success
     assert toolbar_wrapper_action_new_successful
 
+
 def execute_scenario_tests(window):
     # Tests for adding a Lanelet to a Scenario
     scenario = Scenario(0.1, affiliation="Technical University of Munich", source="CommonRoad Scenario Designer")
