@@ -7,8 +7,13 @@ from crdesigner.ui.gui.view.toolboxes.road_network_toolbox.intersections_ui impo
 from crdesigner.ui.gui.view.toolboxes.road_network_toolbox.road_network_toolbox_ui.road_network_toolbox_ui import \
     RoadNetworkToolboxUI
 from commonroad.scenario.traffic_sign import *
-from PyQt5.QtWidgets import *
 
+
+def convert_string_to_float(txt: str) -> float:
+    try:
+        return float(txt) if txt is not None and txt != '' else 0
+    except ValueError:
+        return 0
 
 class AddIntersectionController:
 
@@ -56,10 +61,8 @@ class AddIntersectionController:
         add_traffic_signs = self.road_network_toolbox_ui.intersection_with_traffic_signs.isChecked()
         add_traffic_lights = self.road_network_toolbox_ui.intersection_with_traffic_lights.isChecked()
 
-        x_pos_content = self.road_network_toolbox_ui.intersection_start_position_x.text()
-        y_pos_content = self.road_network_toolbox_ui.intersection_start_position_y.text()
-        x_pos = float(x_pos_content) if x_pos_content is not None and x_pos_content != '' else 0
-        y_pos = float(y_pos_content) if y_pos_content is not None and y_pos_content != '' else 0
+        x_pos = convert_string_to_float(self.road_network_toolbox_ui.intersection_start_position_x.text())
+        y_pos = convert_string_to_float(self.road_network_toolbox_ui.intersection_start_position_y.text())
 
         self.scenario_model.create_four_way_intersection(width, diameter, incoming_length, add_traffic_signs,
                                                          add_traffic_lights, x_pos, y_pos)
@@ -84,10 +87,8 @@ class AddIntersectionController:
         add_traffic_signs = self.road_network_toolbox_ui.intersection_with_traffic_signs.isChecked()
         add_traffic_lights = self.road_network_toolbox_ui.intersection_with_traffic_lights.isChecked()
 
-        x_pos_content = self.road_network_toolbox_ui.intersection_start_position_x.text()
-        y_pos_content = self.road_network_toolbox_ui.intersection_start_position_y.text()
-        x_pos = float(x_pos_content) if x_pos_content is not None and x_pos_content != '' else 0
-        y_pos = float(y_pos_content) if y_pos_content is not None and y_pos_content != '' else 0
+        x_pos = convert_string_to_float(self.road_network_toolbox_ui.intersection_start_position_x.text())
+        y_pos = convert_string_to_float(self.road_network_toolbox_ui.intersection_start_position_y.text())
 
         self.scenario_model.create_three_way_intersection(width, diameter, incoming_length, add_traffic_signs,
                                                           add_traffic_lights, x_pos, y_pos)
@@ -220,16 +221,14 @@ class AddIntersectionController:
             self.road_network_controller.text_browser.append("Please select an intersection first.")
             return
 
-        try:
-            angle = float(self.road_network_toolbox_ui.intersection_rotation_angle.text())
-        except ValueError:
-            return
+        angle = convert_string_to_float(self.road_network_toolbox_ui.intersection_rotation_angle.text())
 
         # Finding intersection.
         selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
         intersection = self.scenario_model.find_intersection_by_id(selected_intersection_id)
 
-        lanelets = self.compute_member_lanelets(intersection=intersection)
+        lanelets = intersection.compute_member_lanelets(self.scenario_model.get_current_scenario().lanelet_network)
+        # lanelets = self.compute_member_lanelets(intersection=intersection)
 
         for lanelet_id in lanelets:
             lanelet = self.scenario_model.find_lanelet_by_id(lanelet_id)
@@ -249,21 +248,15 @@ class AddIntersectionController:
             self.road_network_controller.text_browser.append("Please select an intersection first.")
             return
 
-        try:
-            x = float(self.road_network_toolbox_ui.intersection_x_translation.text())
-        except ValueError:
-            x = 0
+        x = convert_string_to_float(self.road_network_toolbox_ui.intersection_x_translation.text())
+        y = convert_string_to_float(self.road_network_toolbox_ui.intersection_y_translation.text())
 
-        try:
-            y = float(self.road_network_toolbox_ui.intersection_y_translation.text())
-        except ValueError:
-            y = 0
-
-        # Finding intersection.
+        # Finding intersection
         selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
         intersection = self.scenario_model.find_intersection_by_id(selected_intersection_id)
 
-        lanelets = self.compute_member_lanelets(intersection=intersection)
+        lanelets = intersection.compute_member_lanelets(self.scenario_model.get_current_scenario().lanelet_network)
+        # lanelets = self.compute_member_lanelets(intersection=intersection)
 
         for lanelet_id in lanelets:
             lanelet = self.scenario_model.find_lanelet_by_id(lanelet_id)
@@ -271,44 +264,3 @@ class AddIntersectionController:
 
         self.update_intersection()
         self.road_network_controller.set_default_road_network_list_information()
-
-    def compute_member_lanelets(self, intersection: Intersection):
-        outgoing_lanelets = []
-        incoming_lanelets = []
-        intermediate_lanelets = []
-
-        for incoming_group in intersection.incomings:
-            incoming_lanelets += list(incoming_group.incoming_lanelets)
-
-            outgoing_lanelets += list(incoming_group.outgoing_left)
-            for lanelet_id in incoming_group.outgoing_left:
-                outgoing_lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
-
-            outgoing_lanelets += list(incoming_group.outgoing_right)
-            for lanelet_id in incoming_group.outgoing_right:
-                outgoing_lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
-
-            outgoing_lanelets += list(incoming_group.outgoing_straight)
-            for lanelet_id in incoming_group.outgoing_straight:
-                outgoing_lanelets += self.scenario_model.find_lanelet_by_id(lanelet_id).successor
-
-        if intersection.outgoings is not None:
-            for outgoing_group in intersection.outgoings:
-                if outgoing_group.outgoing_lanelets is not None:
-                    outgoing_lanelets += list(outgoing_group.outgoing_lanelets)
-        # find all intermediate lanelets in the intersection
-        for inc_lanelet in incoming_lanelets:
-
-            tmp_lanelets = set()
-            tmp_lanelets.add(inc_lanelet)
-            while len(tmp_lanelets) > 0:
-                tmp_lanelet = tmp_lanelets.pop()
-                if tmp_lanelet not in outgoing_lanelets:
-                    intermediate_lanelets.append(tmp_lanelet)
-                    tmp_succesor_lanelets = self.scenario_model.find_lanelet_by_id(tmp_lanelet).successor
-                    if tmp_succesor_lanelets is not None:
-                        for tmp_suc_lanelet in tmp_succesor_lanelets:
-                            if tmp_suc_lanelet not in outgoing_lanelets:
-                                intermediate_lanelets.append(tmp_suc_lanelet)
-
-        return set(incoming_lanelets + intermediate_lanelets + outgoing_lanelets)

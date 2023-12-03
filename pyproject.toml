@@ -25,8 +25,8 @@ Forum = "https://commonroad.in.tum.de/forum/c/scenario-designer/"
 Source = "https://gitlab.lrz.de/tum-cps/commonroad-scenario-designer"
 
 [tool.poetry.dependencies]
-python = "^3.8"
-commonroad-io = {git = "git@gitlab.lrz.de:cps/commonroad-io.git", rev = "release-2024-1"}
+python = ">=3.8,<3.11"
+commonroad-io = {git = "git@gitlab.lrz.de:cps/commonroad-io.git", rev = "351-translating-rotating-intersection"}
 commonroad-drivability-checker = [
     {version = "2023.1", platform = 'linux'}
      ]
