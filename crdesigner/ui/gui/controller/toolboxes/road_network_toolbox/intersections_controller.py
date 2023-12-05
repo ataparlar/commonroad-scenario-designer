@@ -228,7 +228,6 @@ class AddIntersectionController:
         intersection = self.scenario_model.find_intersection_by_id(selected_intersection_id)
 
         lanelets = intersection.compute_member_lanelets(self.scenario_model.get_current_scenario().lanelet_network)
-        # lanelets = self.compute_member_lanelets(intersection=intersection)
 
         for lanelet_id in lanelets:
             lanelet = self.scenario_model.find_lanelet_by_id(lanelet_id)
@@ -256,7 +255,6 @@ class AddIntersectionController:
         intersection = self.scenario_model.find_intersection_by_id(selected_intersection_id)
 
         lanelets = intersection.compute_member_lanelets(self.scenario_model.get_current_scenario().lanelet_network)
-        # lanelets = self.compute_member_lanelets(intersection=intersection)
 
         for lanelet_id in lanelets:
             lanelet = self.scenario_model.find_lanelet_by_id(lanelet_id)
