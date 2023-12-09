@@ -1,11 +1,10 @@
-from PyQt5.QtWidgets import QComboBox
-
 from crdesigner.config.logging import logger
 from crdesigner.ui.gui.model.scenario_model import ScenarioModel
 from crdesigner.ui.gui.view.toolboxes.road_network_toolbox.road_network_toolbox_ui.road_network_toolbox_ui import \
     RoadNetworkToolboxUI
 from crdesigner.ui.gui.view.toolboxes.road_network_toolbox.traffic_signs_ui import AddTrafficSignUI
 from commonroad.scenario.traffic_sign import *
+
 
 class AddTrafficSignController:
 
@@ -38,22 +37,6 @@ class AddTrafficSignController:
 
         num_rows = self.road_network_toolbox_ui.traffic_sign_element_table.rowCount()
         self.road_network_toolbox_ui.traffic_sign_element_table.removeRow(num_rows - 1)
-
-    @logger.log
-    def add_traffic_sign_element(self, text_browser):
-        """
-        Adds traffic sign element to traffic sign.
-        Only a default entry is created the user has to specify the traffic sign ID manually afterward.
-        """
-        if not self.scenario_model.scenario_created():
-            text_browser.append("_Warning:_ Create a new file")
-            return
-        num_rows = self.road_network_toolbox_ui.traffic_sign_element_table.rowCount()
-        self.road_network_toolbox_ui.traffic_sign_element_table.insertRow(num_rows)
-        combo_box = QComboBox()
-        combo_box.addItems([elem.name for elem in globals()[
-            "TrafficSignID" + SupportedTrafficSignCountry(self.scenario_model.get_country_id()).name.capitalize()]])
-        self.road_network_toolbox_ui.traffic_sign_element_table.setCellWidget(num_rows, 0, combo_box)
 
     @logger.log
     def add_traffic_sign(self, traffic_sign_id: int = None):

@@ -11,12 +11,16 @@
 
 ### Changed
 - Remove second conversion option for Lanelet2 and OpenDRIVE conversion example files
+- osm2cr: virtual traffic sign have position assigned
+- PyQt6 instead of PyQt5 as GUI backend
 
 ### Fixed
 - Adding existing obstacles again
 - Selecting obstacles with set-based prediction
 - Bug when editing curved lanelets in the canvas
 - lanelet2cr wrong final vertice assignment 
+- Deleting unreferenced traffic signs/lights after deleting lanelet
+- Map verification/repairing: Checking unique ID of traffic light cycle element
 
 ## [0.8.0] - 2023-10-31
 

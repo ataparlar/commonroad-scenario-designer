@@ -2,28 +2,28 @@ import copy
 import math
 import warnings
 from typing import List, Union
+import numpy as np
 
-from commonroad.geometry.shape import Circle, Rectangle
 from matplotlib import patches, pyplot as plt
 from matplotlib.backend_bases import MouseButton
-import PyQt5
-from PyQt5.QtCore import *
-from PyQt5.QtGui import *
-from PyQt5.QtWidgets import QSizePolicy
-from PyQt5 import QtCore
-import numpy as np
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 
-from commonroad.planning.planning_problem import  PlanningProblem
+import PyQt6
+from PyQt6.QtCore import *
+from PyQt6.QtGui import *
+from PyQt6.QtWidgets import QSizePolicy
+from PyQt6 import QtCore
+
+from commonroad.geometry.shape import Circle, Rectangle
+from commonroad.planning.planning_problem import PlanningProblem
 from commonroad.visualization.mp_renderer import MPRenderer
 from commonroad.visualization.draw_params import StaticObstacleParams, DynamicObstacleParams
-from crdesigner.config.gui_config import gui_config, DrawParamsCustom
-from numpy import ndarray
-
 from commonroad.scenario.obstacle import StaticObstacle, DynamicObstacle
-from commonroad.scenario.lanelet import LaneletType, Lanelet
+from commonroad.scenario.lanelet import LaneletType
+from commonroad.scenario.scenario import Scenario
 
+from crdesigner.config.gui_config import gui_config, DrawParamsCustom
 from crdesigner.config.logging import logger
 from crdesigner.ui.gui.utilities.aerial_data import get_aerial_image_bing, get_aerial_image_ldbv, \
     get_aerial_image_limits
@@ -31,7 +31,7 @@ from crdesigner.ui.gui.utilities.helper import _merge_dict, calculate_closest_ve
     angle_between, draw_lanelet_polygon
 from crdesigner.ui.gui.utilities.map_creator import MapCreator
 from crdesigner.ui.gui.utilities.scenario_resizer import resize_lanelet_network
-from crdesigner.ui.gui.utilities.toolbox_ui import PosB, CollapsibleCheckBox
+from crdesigner.ui.gui.utilities.toolbox_ui import PosB
 
 ZOOM_FACTOR = 1.2
 
@@ -44,7 +44,8 @@ class DynamicCanvasController(FigureCanvas):
     control_key = False
     show_aerial = False
 
-    def __init__(self, parent=None, scenario_model=None, width=5, height=5, dpi=100, animated_viewer=None):
+    def __init__(self, parent=None, scenario_model: Scenario = None, width: float = 5, height: float = 5,
+                 dpi: int = 100, animated_viewer=None):
         self.scenario_model = scenario_model
         self.image_limits = None
         self.current_aerial_image = None
@@ -58,7 +59,8 @@ class DynamicCanvasController(FigureCanvas):
         self.drawer.set_facecolor('None')
         self.drawer.set_edgecolor('None')
         self.rnd = MPRenderer(ax=self.ax)
-        #Ignore the warning which shows up if the figure layout has changed produced by the method drawer.tight_layout()
+        # Ignore the warning which shows up if the figure layout has changed produced
+        # by the method drawer.tight_layout()
         warnings.filterwarnings("ignore", message="The figure layout has changed to tight")
 
         self._handles = {}
@@ -94,10 +96,10 @@ class DynamicCanvasController(FigureCanvas):
 
         self._parent = parent
         self.setParent(parent)
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         # Set focus on canvas to detect key press events
-        self.setFocusPolicy(QtCore.Qt.ClickFocus)
+        self.setFocusPolicy(QtCore.Qt.FocusPolicy.ClickFocus)
         self.setFocus()
         # any callbacks for interaction per mouse
         self.button_press_event_cid = self.mpl_connect('button_press_event', self.dynamic_canvas_click_callback)
@@ -113,7 +115,7 @@ class DynamicCanvasController(FigureCanvas):
 
         self.clear_axes()
 
-        #Parameters for curved lanlet adding
+        # Parameters for curved lanlet adding
         self.button_is_checked = False
         self.current_curved_lanelet_scenario = None
         self.temp_curved_lanelet = None
@@ -122,7 +124,6 @@ class DynamicCanvasController(FigureCanvas):
         self.new_lanelet = False
 
         gui_config.sub_curved(self.enable)
-
 
     def parent(self):
         return self._parent
@@ -380,7 +381,7 @@ class DynamicCanvasController(FigureCanvas):
                 # if lanelet selected
                 if self._parent.road_network_toolbox.selected_lanelet() != None:
                     # create menu
-                    menu = PyQt5.QtWidgets.QMenu()
+                    menu = PyQt6.QtWidgets.QMenu()
                     edit = menu.addAction("Edit Attributes")
                     remove = menu.addAction("Remove Lanelet")
                     # open menu at mouse coordinates
@@ -1026,15 +1027,13 @@ class DynamicCanvasController(FigureCanvas):
 
     @logger.log
     def display_curved_lanelet(self, is_checked: bool, new_lanelet: bool = True,
-                            mouse_event: QMouseEvent = None) -> None:
+                               mouse_event: QMouseEvent = None) -> None:
         """
-        Initializes the show of the curved_lanlet preview or disables it.
+        Initializes the show of the curved_lanelet preview or disables it.
 
         :param is_checked: boolean if the button is checked and therefore the lanelet view should be shown
-        :param ui_button: ui_button of the curved_lanelet checkbox
         :param new_lanelet: Indicator if the lanelet already exists or is added as a new lanelet
         :param mouse_event: Mouse parameters -> to prevent if you select a lanelet in the GUI to click twice to deselect
-        @param selected_lanelet: Selected Lanelet of the UI
         """
         if self.parent().play_activated:
             self.parent().road_network_toolbox.text_browser.append("Please stop the animation")
@@ -1379,8 +1378,8 @@ class DynamicCanvasController(FigureCanvas):
         self.draw_curved_lanelet()
         self.motion_notify_event_cid = self.mpl_connect('motion_notify_event', self.move_cursor_curved_lanelet)
 
-    def calc_angle(self, left_vertice_point_one: ndarray, right_vertice_point_one: ndarray,
-                    left_vertice_point_two: ndarray, right_vertice_point_two: ndarray) -> float:
+    def calc_angle(self, left_vertice_point_one: np.ndarray, right_vertice_point_one: np.ndarray,
+                   left_vertice_point_two: np.ndarray, right_vertice_point_two: np.ndarray) -> float:
         """
         Calculates the angle between two given lines
 

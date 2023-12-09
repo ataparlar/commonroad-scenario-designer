@@ -1,15 +1,14 @@
 from typing import Optional
 
-from PyQt5 import Qt
-from PyQt5.QtWidgets import QTableWidgetItem, QComboBox
+from PyQt6.QtWidgets import *
+from PyQt6.QtCore import *
 
 from crdesigner.config.logging import logger
 from crdesigner.ui.gui.model.scenario_model import ScenarioModel
 from crdesigner.ui.gui.utilities.toolbox_ui import CheckableComboBox
 from crdesigner.ui.gui.view.toolboxes.road_network_toolbox.road_network_toolbox_ui.road_network_toolbox_ui import \
     RoadNetworkToolboxUI
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import *
+
 from commonroad.scenario.traffic_sign import *
 
 
@@ -53,7 +52,7 @@ class AddIntersectionUI:
             if row != self.road_network_toolbox_ui.intersection_incomings_table.rowCount() - 1:
                 index = self.road_network_toolbox_ui.intersection_incomings_table.cellWidget(row, 5).findText(
                         self.road_network_toolbox_ui.intersection_incomings_table.cellWidget(row, 5).currentText(),
-                        Qt.MatchFixedString)
+                        Qt.MatchFlag.MatchFixedString)
             else:
                 index = -1
             self.road_network_toolbox_ui.intersection_incomings_table.setCellWidget(row, 5, combo_box_left_of)
