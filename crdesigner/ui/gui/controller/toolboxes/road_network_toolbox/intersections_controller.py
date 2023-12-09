@@ -1,4 +1,3 @@
-from PyQt5.QtWidgets import QTableWidgetItem, QComboBox
 from commonroad.scenario.intersection import IncomingGroup, Intersection
 
 from crdesigner.config.logging import logger
