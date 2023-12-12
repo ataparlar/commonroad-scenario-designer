@@ -262,6 +262,7 @@ class CR2LaneletConverter:
                 reg_elements_arr = way_rel.regulatory_elements
                 reg_elements_arr.append(regulatory_element_id)
                 new_way_rel = WayRelation(get_way_relation_key, way_rel.left_way, way_rel.right_way, tag_dict=way_rel.tag_dict, regulatory_elements=reg_elements_arr)
+                print(new_way_rel.id_, traffic_light_reference_list)
                 self.osm.add_way_relation(new_way_rel)
     def _convert_traffic_light(self, light: TrafficLight):
         """

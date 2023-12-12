@@ -20,6 +20,7 @@ from crdesigner.map_conversion.common import geometry
 from crdesigner.map_conversion.common.utils import convert_to_new_lanelet_id
 from crdesigner.map_conversion.common.conversion_lanelet import ConversionLanelet
 from crdesigner.map_conversion.common.utils import generate_unique_id
+from crdesigner.map_conversion.opendrive.opendrive_conversion.utils import encode_road_section_lane_width_id
 
 
 class ConversionLaneletNetwork(LaneletNetwork):
@@ -906,7 +907,7 @@ class ConversionLaneletNetwork(LaneletNetwork):
 
         return directions
 
-    def add_traffic_lights_to_network(self, traffic_lights: List[TrafficLight]):
+    def add_traffic_lights_to_network(self, traffic_lights: List[TrafficLight], traffic_light_lanes):
         """
         Adds all the traffic lights in the network object to the lanelet network
         Requires a list of all the traffic lights in the entire map
@@ -914,12 +915,14 @@ class ConversionLaneletNetwork(LaneletNetwork):
         :param traffic_lights: List of all the traffic lights in the lanelet network.
         :type traffic_lights: list
         """
-        for traffic_light in traffic_lights:
+        for idx, traffic_light in enumerate(traffic_lights):
+            lane_ids = []
             min_distance = float("inf")
             id_for_adding = None
             for intersection in self.intersections:
                 for incoming in intersection.incomings:
                     for lanelet in incoming.incoming_lanelets:
+                        print(lanelet)
                         lane = self.find_lanelet_by_id(lanelet)
                         # Lanelet cannot have more traffic lights than number of successors
                         if len(lane.successor) > len(lane.traffic_lights):
@@ -929,13 +932,20 @@ class ConversionLaneletNetwork(LaneletNetwork):
                             if dist < min_distance:
                                 min_distance = dist
                                 id_for_adding = lanelet
-            if id_for_adding is None:
-                warnings.warn("For traffic light with ID {} no referencing lanelet was found!".format(
-                        traffic_light.traffic_light_id))
-                self.add_traffic_light(traffic_light, set())
-            else:
-                self.add_traffic_light(traffic_light, {id_for_adding})
-
+            # if id_for_adding is None:
+            #     warnings.warn("For traffic light with ID {} no referencing lanelet was found!".format(
+            #             traffic_light.traffic_light_id))
+            #     self.add_traffic_light(traffic_light, set())
+            # else:
+            #     self.add_traffic_light(traffic_light, {id_for_adding})
+            for lane_section in traffic_light_lanes[idx].lanes.lane_sections:
+                for lane in lane_section.allLanes:
+                    lane_id = encode_road_section_lane_width_id(
+                        traffic_light_lanes[idx].id, lane_section.idx, lane.id, -1
+                    )
+                    lane_ids.append(lane_id)
+            print(lane_ids)
+            self.add_traffic_light(traffic_light, lane_ids)
         # Traffic light directions are assigned once all traffic lights are assigned to lanelets so that it can be
         # determined how directions need to be divided (i.e. the decision between left to one light and straight to
         # one light instead of left-straight)

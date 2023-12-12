@@ -49,6 +49,7 @@ def get_traffic_signals(road: Road) -> Tuple[List[TrafficLight], List[TrafficSig
     traffic_signs = []
     traffic_lights = []
     stop_lines = []
+    traffic_light_lane = []
 
     # TODO: Stop lines are created and appended to the list for DEU and OpenDrive format.
     # This has been replicated for other countries but has not been tested with a test case
@@ -166,10 +167,11 @@ def get_traffic_signals(road: Road) -> Tuple[List[TrafficLight], List[TrafficSig
                                              traffic_light_cycle=get_default_cycle())  # TODO remove for new CR-Format
 
                 traffic_lights.append(traffic_light)
+                traffic_light_lane.append(road)
             else:
                 continue
 
-    return traffic_lights, traffic_signs, stop_lines
+    return traffic_lights, traffic_signs, stop_lines, traffic_light_lane
 
 
 def calculate_stop_line_position(lane_sections: List[LaneSection], signal: Signal, position: np.ndarray,

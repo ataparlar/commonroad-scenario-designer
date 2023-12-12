@@ -66,6 +66,7 @@ class Network:
         self._stop_lines = []
         self._crosswalks = []
         self._country_ID = None
+        self._traffic_light_lanes = []
 
     def assign_country_id(self, value: str):
         """Assign country ID according to the ISO 3166-1 3 letter standard
@@ -118,7 +119,8 @@ class Network:
 
             # stop lines from traffic signals (legacy)
             stop_lines_final = []
-            traffic_lights, traffic_signs, stop_lines = get_traffic_signals(road)
+            traffic_lights, traffic_signs, stop_lines, traffic_light_lanes = get_traffic_signals(road)
+            self._traffic_light_lanes.extend(traffic_light_lanes)
 
             self._crosswalks.extend(get_crosswalks(road))
 
@@ -209,7 +211,7 @@ class Network:
         self.relate_crosswalks_to_intersection(lanelet_network)
 
         # Assign traffic signals, lights and stop lines to lanelet network
-        lanelet_network.add_traffic_lights_to_network(self._traffic_lights)
+        lanelet_network.add_traffic_lights_to_network(self._traffic_lights, self._traffic_light_lanes)
         lanelet_network.add_traffic_signs_to_network(self._traffic_signs)
         lanelet_network.add_stop_lines_to_network(self._stop_lines)
 
