@@ -2,17 +2,11 @@ from commonroad.scenario.intersection import IncomingGroup, Intersection
 
 from crdesigner.config.logging import logger
 from crdesigner.ui.gui.model.scenario_model import ScenarioModel
+from crdesigner.ui.gui.utilities.string_util import convert_string_to_float, check_string_for_null
 from crdesigner.ui.gui.view.toolboxes.road_network_toolbox.intersections_ui import AddIntersectionUI
 from crdesigner.ui.gui.view.toolboxes.road_network_toolbox.road_network_toolbox_ui.road_network_toolbox_ui import \
     RoadNetworkToolboxUI
 from commonroad.scenario.traffic_sign import *
-
-
-def convert_string_to_float(txt: str) -> float:
-    try:
-        return float(txt) if txt is not None and txt != '' else 0
-    except ValueError:
-        return 0
 
 
 class AddIntersectionController:
@@ -179,14 +173,17 @@ class AddIntersectionController:
             self.road_network_controller.text_browser.append("Please stop the animation first.")
             return
 
+        if check_string_for_null(txt=self.road_network_toolbox_ui.selected_intersection.currentText()):
+            self.road_network_controller.text_browser.append("Please select an intersection first.")
+            return
+
         if not self.scenario_model.scenario_created():
             self.road_network_controller.text_browser.append("_Warning:_ Create a new file")
             return
 
-        if self.road_network_toolbox_ui.selected_intersection.currentText() not in ["", "None"]:
-            selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
-            self.scenario_model.remove_intersection(selected_intersection_id)
-            self.road_network_controller.set_default_road_network_list_information()
+        selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
+        self.scenario_model.remove_intersection(selected_intersection_id)
+        self.road_network_controller.set_default_road_network_list_information()
 
     @logger.log
     def update_intersection(self):
@@ -197,14 +194,17 @@ class AddIntersectionController:
             self.road_network_controller.text_browser.append("Please stop the animation first.")
             return
 
+        if check_string_for_null(txt=self.road_network_toolbox_ui.selected_intersection.currentText()):
+            self.road_network_controller.text_browser.append("Please select an intersection first.")
+            return
+
         if not self.scenario_model.scenario_created():
             self.road_network_controller.text_browser.append("_Warning:_ Create a new file")
             return
 
-        if self.road_network_toolbox_ui.selected_intersection.currentText() not in ["", "None"]:
-            selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
-            self.scenario_model.update_intersection(selected_intersection_id)
-            self.add_intersection(selected_intersection_id)
+        selected_intersection_id = int(self.road_network_toolbox_ui.selected_intersection.currentText())
+        self.scenario_model.update_intersection(selected_intersection_id)
+        self.add_intersection(selected_intersection_id)
 
     def rotate_intersection(self):
         """
@@ -213,7 +213,7 @@ class AddIntersectionController:
 
         # Getting rotation details.
 
-        if self.road_network_toolbox_ui.selected_intersection.currentText() in ["", "None"]:
+        if check_string_for_null(txt=self.road_network_toolbox_ui.selected_intersection.currentText()):
             self.road_network_controller.text_browser.append("Please select an intersection first.")
             return
 
@@ -239,7 +239,7 @@ class AddIntersectionController:
 
         # Getting rotation details.
 
-        if self.road_network_toolbox_ui.selected_intersection.currentText() in ["", "None"]:
+        if check_string_for_null(txt=self.road_network_toolbox_ui.selected_intersection.currentText()):
             self.road_network_controller.text_browser.append("Please select an intersection first.")
             return
 
